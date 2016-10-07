@@ -70,7 +70,7 @@ myvcf=vcflist(vcfpath)
 logging.debug("VCF ingested, contains "+str(len(myvcf))+" records")
 
 ## Clean up VCF by editing CHROM names.  We want "1", not "chr1"
-myvcf=cleanchroms(myvcf)
+#myvcf=cleanchroms(myvcf)
 
 ## Define filename prefixes for output..
 tbasename = os.path.basename(tbampath)
@@ -84,27 +84,27 @@ nfilename = os.path.splitext(nbasename)[0]
 ################################################################
 
 #Mapping score - COMPLETE
-#mapping_quality(copy.deepcopy(myvcf),tbampath,tfilename+".mapping_quality.txt")
+mapping_quality(copy.deepcopy(myvcf),tbampath,tfilename+".mapping_quality.txt")
 
 #Depth - COMPLETE
-#depth(copy.deepcopy(myvcf),tbampath,tfilename+".depth.txt")
-#depth(copy.deepcopy(myvcf),nbampath,nfilename+".depth.txt")
+depth(copy.deepcopy(myvcf),tbampath,tfilename+".depth.txt")
+depth(copy.deepcopy(myvcf),nbampath,nfilename+".depth.txt")
 
 #Base quality score - COMPLETE
-#base_quality(copy.deepcopy(myvcf),tbampath,tfilename+".base_quality.txt")
+base_quality(copy.deepcopy(myvcf),tbampath,tfilename+".base_quality.txt")
 
 #VAF (tumor and normal) - COMPLETE
-#vaf(copy.deepcopy(myvcf),tbampath,tfilename+".vaf.txt")
-#vaf(copy.deepcopy(myvcf),nbampath,nfilename+".vaf.txt")
+vaf(copy.deepcopy(myvcf),tbampath,tfilename+".vaf.txt")
+vaf(copy.deepcopy(myvcf),nbampath,nfilename+".vaf.txt")
 
 #Alignability - COMPLETE
-#alignability(copy.deepcopy(myvcf),alignabilitytrack,tfilename+".alignability.txt")
+alignability(copy.deepcopy(myvcf),alignabilitytrack,tfilename+".alignability.txt")
 
-#On-target (i.e. within exome) - COMPLETE
-#ontarget(copy.deepcopy(myvcf),bedfile,tfilename+".ontarget.txt")
+#On-target (i.e. within exome) - COMPLETE but requires correct 
+ontarget(copy.deepcopy(myvcf),bedfile,tfilename+".ontarget.txt")
 
 #OxoG artefacts - COMPLETE
-#oxog(copy.deepcopy(myvcf),tbampath,tfilename+".oxog.txt")
+oxog(copy.deepcopy(myvcf),tbampath,tfilename+".oxog.txt")
 
 #Read direction bias - errors
 directioner(copy.deepcopy(myvcf),tbampath,tfilename+".read_direction.txt")
