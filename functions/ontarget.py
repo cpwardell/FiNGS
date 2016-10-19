@@ -21,11 +21,11 @@ def ontarget(myvcf,bedfile,filename):
 
     ## This tells us if it is present in the bed file (1=present, 0=absent)
     try: 
-      print(len(list(bedtab.fetch(variant.CHROM, variant.POS, variant.POS+1))),file=log)
-      print(len(list(bedtab.fetch(variant.CHROM, variant.POS, variant.POS+1))))
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(len(list(bedtab.fetch(variant.CHROM, variant.POS, variant.POS+1))),file=log))
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(len(list(bedtab.fetch(variant.CHROM, variant.POS, variant.POS+1)))))
     except:
-      print(0,file=log)
-      print(0)
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0),file=log)
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0))
 
 
   ## Close the logfile

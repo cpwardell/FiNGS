@@ -69,10 +69,11 @@ def oxog(myvcf,bampath,filename):
 
 
     ## THIS IS WHERE WE WRITE OUTPUT
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value
     #print((variant.REF+"\t"+str(variant.ALT[0])=="A")+str(score))
     #print(variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(score))
-    print(score)
-    print(score,file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(score))
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(score),file=log)
   
   ## Close the bamfile
   samfile.close()

@@ -52,8 +52,9 @@ def directioner(myvcf,bampath,filename):
             RF+=1
 
     ## Write output
-    print(variant.CHROM+":"+str(variant.POS+1)+"\t"+variant.REF+"\t"+str(variant.ALT[0])+"\t"+varianttype+"\t"+str(AF)+"\t"+str(AR)+"\t"+(str(RF)+"\t"+str(RR)))
-    print(str(AF)+"\t"+str(AR)+"\t"+(str(RF)+"\t"+str(RR)),file=log)
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value 
+    print(variant.CHROM+":"+str(variant.POS)+"\t"+variant.REF+"\t"+str(variant.ALT[0])+"\t"+varianttype+"\t"+str(AF)+"\t"+str(AR)+"\t"+(str(RF)+"\t"+str(RR)))
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(AF)+"\t"+str(AR)+"\t"+(str(RF)+"\t"+str(RR)),file=log)
   
   ## Close the bamfile
   samfile.close()

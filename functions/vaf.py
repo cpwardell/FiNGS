@@ -82,9 +82,12 @@ def vaf(myvcf,bampath,filename):
       vaf=0
     
     ## THIS IS WHERE WE WRITE OUTPUT
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value
     #print(vaf)
-    print(variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf))
-    print(variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf),file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf))
+    #print(variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf))
+    #print(variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf),file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+variant.REF+"\t"+str(variant.ALT[0])+"\t"+str(refcount)+"\t"+str(altcount)+"\t"+varianttype+"\t"+str(vaf),file=log)
   
   ## Close the bamfile
   samfile.close()

@@ -70,7 +70,7 @@ myvcf=vcflist(vcfpath)
 logging.debug("VCF ingested, contains "+str(len(myvcf))+" records")
 
 ## Clean up VCF by editing CHROM names.  We want "1", not "chr1"
-#myvcf=cleanchroms(myvcf)
+myvcf=cleanchroms(myvcf)
 
 ## Define filename prefixes for output..
 tbasename = os.path.basename(tbampath)

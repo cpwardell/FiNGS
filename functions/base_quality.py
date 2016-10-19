@@ -34,8 +34,9 @@ def base_quality(myvcf,bampath,filename):
           baseq.append(ord(alignedread.qual[offset])-33)
 
     ## THIS IS WHERE WE WRITE OUTPUT
-    print(mean(baseq))
-    print(mean(baseq),file=log)
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(baseq)))
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(baseq)),file=log)
   
   ## Close the bamfile
   samfile.close()

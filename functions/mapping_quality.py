@@ -35,9 +35,10 @@ def mapping_quality(myvcf,bampath,filename):
         mapq.append(alignedread.mapq)
 
     ## THIS IS WHERE WE WRITE OUTPUT
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value
     #print(str(idx)+"\t"+str(mean(mapq))+"\t"+str(len(mapq)))
-    print(mean(mapq))
-    print(mean(mapq),file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(mapq)))
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(mapq)),file=log)
   
   ## Close the bamfile
   samfile.close()

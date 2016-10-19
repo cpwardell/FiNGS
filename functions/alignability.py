@@ -35,16 +35,16 @@ def alignability(myvcf,alignabilitytrack,filename):
       for record in alignfile.fetch(variant.CHROM, variant.POS, variant.POS+1):
         alignability=float(record.split("\t")[3])
         ## THIS IS WHERE WE WRITE OUTPUT
-        print(alignability)
-        print(alignability,file=log)
+        print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(alignability))
+        print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(alignability),file=log)
 
       if(len(list(alignfile.fetch(variant.CHROM, variant.POS, variant.POS+1)))==0):
-        print(0)
-        print(0,file=log)
+        print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0))
+        print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0),file=log)
 
     except:
-      print(0)
-      print(0,file=log)
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0))
+      print(str(variant.CHROM)+":"+str(variant.POS+1)+"\t"+str(0),file=log)
 
   ## Close the logfile
   log.close()

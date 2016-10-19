@@ -28,8 +28,9 @@ def depth(myvcf,bampath,filename):
         depth=depth+1
 
     ## THIS IS WHERE WE WRITE OUTPUT
-    print(depth,file=log)
-    print(depth)
+    variant.POS=variant.POS+1 # return variant.POS to original 1-based value
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(depth),file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(depth))
   
   ## Close the bamfile
   samfile.close()
