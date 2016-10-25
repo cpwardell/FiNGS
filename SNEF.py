@@ -21,6 +21,7 @@ from functions.alignability import *
 from functions.ontarget import *
 from functions.oxog import *
 from functions.directioner import *
+from functions.altlevendist import *
 
 
 ## Gather command line args
@@ -70,7 +71,7 @@ myvcf=vcflist(vcfpath)
 logging.debug("VCF ingested, contains "+str(len(myvcf))+" records")
 
 ## Clean up VCF by editing CHROM names.  We want "1", not "chr1"
-myvcf=cleanchroms(myvcf)
+#myvcf=cleanchroms(myvcf)
 
 ## Define filename prefixes for output..
 tbasename = os.path.basename(tbampath)
@@ -82,6 +83,10 @@ nfilename = os.path.splitext(nbasename)[0]
 ################################################################
 ## Begin tests #################################################
 ################################################################
+
+#Test for mutations per ALT read
+altlevendist(copy.deepcopy(myvcf),tbampath,tfilename+".altlevendist.txt")
+#exit()
 
 #Mapping score - COMPLETE
 mapping_quality(copy.deepcopy(myvcf),tbampath,tfilename+".mapping_quality.txt")
