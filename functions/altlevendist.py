@@ -9,6 +9,15 @@ import editdistance # to calculate distance between strings
 
 from functions.shared_functions import *
 
+## Define a median function:
+def median(mylist):
+  sorts = sorted(mylist)
+  length = len(sorts)
+  if not length % 2:
+    return (sorts[length / 2] + sorts[length / 2 - 1]) / 2.0
+  return sorts[length / 2]
+
+
 def altlevendist(myvcf,bampath,filename):
 
   log=open(filename,"w")
@@ -81,9 +90,10 @@ def altlevendist(myvcf,bampath,filename):
               levdists.append(editdistance.eval(alignedread.get_reference_sequence(),alignedread.query_alignment_sequence))
           except:
             pass
-    ## Calculate mean Levenschtein distance for this variant
+    ## Calculate median Levenschtein distance for this variant
     try:
-      ld=float(sum(levdists))/len(levdists)
+      #ld=float(sum(levdists))/len(levdists)
+      ld=median(levdists)
     except:
       ld=0
 
