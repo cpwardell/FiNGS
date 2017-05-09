@@ -84,12 +84,12 @@ nfilename = os.path.splitext(nbasename)[0]
 ## Begin tests #################################################
 ################################################################
 
-#Test for mutations per ALT read
-altlevendist(copy.deepcopy(myvcf),tbampath,tfilename+".altlevendist.txt")
-#exit()
 
 #Mapping score - COMPLETE
 mapping_quality(copy.deepcopy(myvcf),tbampath,tfilename+".mapping_quality.txt")
+
+#Test for mutations per ALT read
+altlevendist(copy.deepcopy(myvcf),tbampath,tfilename+".altlevendist.txt")
 
 #Depth - COMPLETE
 depth(copy.deepcopy(myvcf),tbampath,tfilename+".depth.txt")
@@ -102,17 +102,21 @@ base_quality(copy.deepcopy(myvcf),tbampath,tfilename+".base_quality.txt")
 vaf(copy.deepcopy(myvcf),tbampath,tfilename+".vaf.txt")
 vaf(copy.deepcopy(myvcf),nbampath,nfilename+".vaf.txt")
 
-#Alignability - COMPLETE
-alignability(copy.deepcopy(myvcf),alignabilitytrack,tfilename+".alignability.txt")
-
-#On-target (i.e. within exome) - COMPLETE but requires correct 
-ontarget(copy.deepcopy(myvcf),bedfile,tfilename+".ontarget.txt")
-
 #OxoG artefacts - COMPLETE
 oxog(copy.deepcopy(myvcf),tbampath,tfilename+".oxog.txt")
 
+#Alignability - COMPLETE
+if alignabilitytrack is not "skip":
+  alignability(copy.deepcopy(myvcf),alignabilitytrack,tfilename+".alignability.txt")
+
+#On-target (i.e. within exome) - COMPLETE
+## Skips this test if argument set to "skip"
+if bedfile is not "skip":
+  ontarget(copy.deepcopy(myvcf),bedfile,tfilename+".ontarget.txt")
+
+
 #Read direction bias - errors
-directioner(copy.deepcopy(myvcf),tbampath,tfilename+".read_direction.txt")
+#directioner(copy.deepcopy(myvcf),tbampath,tfilename+".read_direction.txt")
 
 ## Other filters to implement...
 #Homopolymers ???
