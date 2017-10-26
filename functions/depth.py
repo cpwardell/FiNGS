@@ -22,7 +22,7 @@ def depth(myvcf,bampath,filename):
     variant.POS=variant.POS-1
 
     for alignedread in samfile.fetch(variant.CHROM,variant.POS,variant.POS+1):
-      if not alignedread.is_proper_pair:
+      if alignedread.is_duplicate: ## Exclude duplicates
         continue
       else:
         depth=depth+1

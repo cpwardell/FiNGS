@@ -22,22 +22,12 @@ def mean(numbers):
 ## Function for removing "chr" from chromosome names
 ## Also rename "M" to "MT"
 def cleanchroms(myvcf):
-  
   for idx,variant in enumerate(myvcf):
-
-#    ## Remove "chr" string from chrom
-#    if not variant.CHROM.find("chr"):
-#      variant.CHROM=variant.CHROM[3:]
-#
-#    if variant.CHROM=="M":
-#      variant.CHROM="MT"
     variant.CHROM=cleanchrom(variant.CHROM)
-
   return(myvcf)
 
 ## Function to clean a single chromosome name
 def cleanchrom(CHROM):
-
   ## Remove "chr" string from chrom
   if not CHROM.find("chr"):
     CHROM=CHROM[3:]
