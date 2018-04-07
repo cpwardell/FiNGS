@@ -1,6 +1,5 @@
 ## OxoG contamination calculator
 
-from __future__ import print_function
 import logging
 import pysam
 
@@ -32,7 +31,7 @@ def oxog(myvcf,bampath,filename):
     score="NA"
 
     for alignedread in samfile.fetch(variant.CHROM,variant.POS,variant.POS+1):
-      if not alignedread.is_proper_pair:
+      if alignedread.is_duplicate:
         continue
       else:
         ## Which base in the read is at the position we want?  Use the

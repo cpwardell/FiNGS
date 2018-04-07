@@ -1,9 +1,8 @@
 ## Base quality calculator
 
-from __future__ import print_function
 import logging
 import pysam
-
+import statistics
 from functions.shared_functions import *
 
 def base_quality(myvcf,bampath,filename):
@@ -23,7 +22,7 @@ def base_quality(myvcf,bampath,filename):
     variant.POS=variant.POS-1
 
     for alignedread in samfile.fetch(variant.CHROM,variant.POS,variant.POS+1):
-      if not alignedread.is_proper_pair:
+      if alignedread.is_duplicate:
         continue
       else:
         ## Which base in the read is at the position we want?  Use the
@@ -35,8 +34,8 @@ def base_quality(myvcf,bampath,filename):
 
     ## THIS IS WHERE WE WRITE OUTPUT
     variant.POS=variant.POS+1 # return variant.POS to original 1-based value
-    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(baseq)))
-    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(baseq)),file=log)
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(statistics.median(baseq)))
+    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(statistics.median(baseq)),file=log)
   
   ## Close the bamfile
   samfile.close()

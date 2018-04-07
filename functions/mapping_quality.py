@@ -1,10 +1,9 @@
 ## Mapping quality calculator
+## Also produces proportion of reads that are mapping quality zero
 
-from __future__ import print_function
 import logging
 import pysam
-
-
+import statistics
 from functions.shared_functions import *
 
 def mapping_quality(myvcf,bampath,filename):
@@ -27,18 +26,19 @@ def mapping_quality(myvcf,bampath,filename):
       if alignedread.is_duplicate:
         continue
       else:
-      ## Which base in the read is at the position we want?  Use the
-      ## "aligned_pairs" list of tuples to determine this
-      #offset = [item for item in alignedread.aligned_pairs if item[1] == variant.POS][0][0]
-      #if(offset!=None):
-       # mapq.append(alignedread.mapq)
         mapq.append(alignedread.mapq)
+
+    ## Count how many MAPQ==0 reads there are
+    zeroes=0
+    for i in range(0,len(mapq),1):
+        if (mapq[i] == 0):
+            zeroes += 1
 
     ## THIS IS WHERE WE WRITE OUTPUT
     variant.POS=variant.POS+1 # return variant.POS to original 1-based value
-    #print(str(idx)+"\t"+str(mean(mapq))+"\t"+str(len(mapq)))
-    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(mapq)))
-    print(str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(mean(mapq)),file=log)
+    resultstring=str(variant.CHROM)+":"+str(variant.POS)+"\t"+str(statistics.median(mapq))+"\t"+str(zeroes/len(mapq))
+    print(resultstring)
+    print(resultstring,file=log)
   
   ## Close the bamfile
   samfile.close()

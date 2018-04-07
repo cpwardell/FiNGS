@@ -1,8 +1,42 @@
 # Shared functions
 
 import vcf
+import gzip
+import os
 
-## Function to read VCF files and return an object
+## Function to count the number of records in a VCF file
+def vcfcount(vcfpath):
+
+  ## Check ending of vcfpath; if "vcf", ok, if "gz", open file
+  ## Otherwise, quit with an error
+  if(vcfpath.endswith("vcf")):
+    vcf = open(vcfpath, 'r')
+    comment="#" # character version
+  if(vcfpath.endswith("gz")):
+    vcf = gzip.open(vcfpath, 'r')
+    comment=b'#' # byte version
+  if not (vcfpath.endswith(("vcf","gz"))):
+    logging.debug("ERROR: VCF doesn't end with \"vcf\" or \"gz\":"+vcfpath)
+    exit("ERROR: VCF doesn't end with \"vcf\" or \"gz\":"+vcfpath)
+
+  recordcount=0
+  for line in vcf:
+    if not line.startswith(comment):
+      recordcount+=1
+  return(recordcount)
+
+def vcfyield(vcfbuffer,chunksize,finalrecord):
+  recordcount=0
+  vcfchunk=list()
+  for record in vcfbuffer:
+    vcfchunk.append(record)
+    recordcount+=1
+    if(len(vcfchunk)==chunksize or recordcount==finalrecord):
+      yield(vcfchunk)
+      vcfchunk=list()
+
+
+## Function to read whole VCF files and return an object
 def vcflist(vcfpath):
   myvcf=list()
   vcf_reader = vcf.Reader(open(vcfpath, 'r'))

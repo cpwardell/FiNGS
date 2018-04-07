@@ -1,9 +1,7 @@
 ## Depth quality calculator
 
-from __future__ import print_function
 import logging
 import pysam
-
 from functions.shared_functions import *
 
 def depth(myvcf,bampath,filename):
