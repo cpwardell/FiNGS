@@ -1,5 +1,5 @@
-## VAF (variant allele frequency) calculator
-
+## Primary function.  There is one large function rather than many smaller ones
+## to ensure the BAM file(s) are read once and once only
 ## Note that for indels, it will ONLY count reads that support the ENTIRE indel
 
 import logging
@@ -10,11 +10,11 @@ import editdistance
 import numpy
 from functions.shared_functions import *
 
-def vaf(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth):
+def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth):
 
   log=open(filename,"w")
 
-  logging.debug("Started processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
+  logging.info("Started processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
 
   ## Open the bamfile.  We do it ONCE and ONCE ONLY for speed reasons
   #logging.debug("Opening bam file")
@@ -94,7 +94,7 @@ def vaf(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth):
         ## If depth is beyond maxdepth, break loop and calculate results
         ## Also, emit a debugging statement
         if(depth>=maxdepth):
-          logging.debug("WARNING: variant "+str(idx+1)+" of "+str(len(myvcf))+" in chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" at position "+str(variant.CHROM)+":"+str(variant.POS)+" is deeper than maximum depth of "+str(maxdepth)+", calculations truncated at this depth")
+          logging.info("WARNING: variant "+str(idx+1)+" of "+str(len(myvcf))+" in chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" at position "+str(variant.CHROM)+":"+str(variant.POS)+" is deeper than maximum depth of "+str(maxdepth)+", calculations truncated at this depth")
           break
 
         ## Increment depth by 1
@@ -526,5 +526,5 @@ def vaf(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth):
   log.close()
 
   ## Announce completion
-  logging.debug("Finished processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
+  logging.info("Finished processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
 

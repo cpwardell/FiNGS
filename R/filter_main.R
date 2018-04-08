@@ -49,7 +49,7 @@ pdata=filterminvaftumor(pdata,params["minvaftumor",])
 pdata=filtermaxoaftumor(pdata,params["maxoaftumor",])
 pdata=filtermaxaltsecondtumor(pdata,params["maxsecondtumor",])
 pdata=filtermaxrefbadorientnormal(pdata,params["maxbadorient",])
-pdata=filtermaxrefcontignormal(pdata,params["maxcontig",])
+#pdata=filtermaxrefcontignormal(pdata,params["maxcontig",])
 
 ## Write the file containing everything...
 write.table(pdata,file=paste0(resultsdir,"/filtered.results.txt"),col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
