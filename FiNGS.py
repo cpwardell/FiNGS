@@ -13,7 +13,7 @@
 ## Can we gzip the pre-R output? - do not do this; read.table sometimes crashes
 ## R should write/append to the log file
 ## R should output either a complete VCF or just PASSed results
-## Option to only use "PASS" results from variant caller "trustvc" option
+## Option to only use "PASS" results from variant caller "trustvcf" option
 ## Test for existing output and run R stage only
 ## Some way to pass parameter file in 
 ## Docker build file
