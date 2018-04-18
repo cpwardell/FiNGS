@@ -1,7 +1,10 @@
 ## This is the main method for running filters
 
 ## Load packages
-library(VariantAnnotation)
+suppressMessages(library(VariantAnnotation))
+
+## Store time script was invoked for output names
+thetime=strftime(Sys.time(),"%Y%m%d%H%M%S")
 
 ## Collect arguments
 args = commandArgs(TRUE)
@@ -11,6 +14,8 @@ resultsdir=args[3]
 pathtotumor=args[4]
 pathtonormal=args[5]
 pathtovcf=args[6]
+pass=args[7]
+passonly=args[8]
 
 if(parameters=="default"){
   parameters=paste0(codedir,"/R/filter_parameters.txt")
@@ -23,15 +28,12 @@ source(paste0(codedir,"/R/filter_functions.R"))
 params=read.table(parameters,header=F,row.names=1)
 
 # Read in mutect data for exome
-rawdata=filterreader(pathtotumor,pathtonormal)
+pdata=filterreader(pathtotumor,pathtonormal)
 
-## Create a copy of the raw data to edit
-pdata=rawdata
+### Perform filtering
 
-## Perform filtering
-
-#source("//144.30.235.61/runs/chris_working_dir/project_snef/SNEF/R/filter_functions.R")
-#params=read.table("//144.30.235.61/runs/chris_working_dir/project_snef/SNEF/R/filter_parameters.txt",header=F,row.names=1)
+## Write plots to a single PDF
+pdf(paste0(resultsdir,"/filter.plots.",thetime,".pdf"), onefile=TRUE,paper="letter")
 
 pdata=filterminimumdepth(pdata,params["minimumdepth",])
 pdata=filtermaximumdepth(pdata,params["maximumdepth",])
@@ -49,13 +51,20 @@ pdata=filterminvaftumor(pdata,params["minvaftumor",])
 pdata=filtermaxoaftumor(pdata,params["maxoaftumor",])
 pdata=filtermaxaltsecondtumor(pdata,params["maxsecondtumor",])
 pdata=filtermaxrefbadorientnormal(pdata,params["maxbadorient",])
-#pdata=filtermaxrefcontignormal(pdata,params["maxcontig",])
+
+## Turn off graphics device
+graphics.off()
 
 ## Write the file containing everything...
-write.table(pdata,file=paste0(resultsdir,"/filtered.results.txt"),col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
+write.table(pdata,file=paste0(resultsdir,"/filtered.results.",thetime,".txt"),col.names=TRUE,row.names=FALSE,sep="\t",quote=FALSE)
 
 ## Read the original VCF, and write a filtered version
-invcf=readVcf(pathtovcf,genome="GRCh38")
+invcf=readVcf(pathtovcf,genome="hg")
+
+## If --PASS is set, cut down the VCF to only PASSing variants
+if(pass=="True"){
+  invcf=invcf[fixed(invcf)$FILTER%in%"PASS"]
+}
 
 ## Set up FILTER values for VCF
 filtercols=grep("filter",colnames(pdata),value=T)
@@ -72,31 +81,44 @@ filtervals[filtervals==""]="PASS"
 ## Edit VCF; update header and change filter values
 fixed(invcf)$FILTER=filtervals
 
+## If --PASSonly is set, strip VCF to only PASSing variants
+if(passonly=="True"){
+  invcf=invcf[fixed(invcf)$FILTER%in%"PASS"]
+}
+
+
 #1 define filter descriptions and names
-filterheader=data.frame(Description=filtercols) # descriptions
-rownames(filterheader)=c("Minimum depth in tumor of 10x",
-              "Minimum depth in normal of 10x",
-              "Maximum depth in normal of 1000x",
-              "Maximum depth in tumor of 1000x",
-              "Minimum number of ALT reads in tumor of 3",
-              "Minimum base quality of ALT reads in tumor of 30x",
-              "Minimum base quality of REF reads in tumor of 30x",
-              "Minimum base quality of REF reads in normal of 30x",
-              "Proportion of zero mapping quality reads in tumor must be less than 10%",
-              "Proportion of zero mapping quality reads in normal must be less than 10%",
-              "Tumor sample strand bias top 10%",
-              "Minimum median mapping quality of ALT reads in tumor greater than 50",
-              "Difference between median mapping quality of ALT reads in tumor and REF reads in the normal greater than 5",
-              "Median shortest distance to either aligned end in tumor less than 10",
-              "MAD of ALT position in read less than 3",
-              "Maximum edit distance of ALT reads in tumor less than 4",
-              "Maximum edit distance of REF reads in tumor less than 3",
-              "Maximum VAF in normal of 0.03",
-              "Minimum VAF in tumor of 0.00",
-              "Maximum OAF in tumor of 0.04")
+filterheader=data.frame(Description=c(
+  paste("Minimum depth in tumor:",params["minimumdepth",]),
+  paste("Minimum depth in normal:",params["minimumdepth",]),
+  paste("Maximum depth in normal:",params["maximumdepth",]),
+  paste("Maximum depth in tumor:",params["maximumdepth",]),
+  paste("Minimum number of ALT reads in tumor:",params["minaltcount",]),
+  paste("Minimum median base quality of ALT reads in tumor:",params["minbasequality",]),
+  paste("Minimum median base quality of REF reads in tumor:",params["minbasequality",]),
+  paste("Minimum median base quality of REF reads in normal:",params["minbasequality",]),
+  paste("Maximum proportion of zero mapping quality reads in tumor:",params["zeroproportion",]),
+  paste("Maximum proportion of zero mapping quality reads in normal:",params["zeroproportion",]),
+  paste("Strand bias exclusion proportion:",params["strandbias",]),
+  paste("Minimum median mapping quality of ALT reads in tumor:",params["minmapquality",]),
+  paste("Maximum difference between median mapping quality of ALT reads in tumor and REF reads in normal:",params["minmapqualitydifference",]),
+  paste("Maximum median shortest distance to either aligned end in tumor:",params["enddistance",]),
+  paste("Maximum MAD of ALT position in tumor:",params["enddistancemad",]),
+  paste("Maximum edit distance of ALT reads in tumor:",params["editdistance",]),
+  paste("Maximum edit distance of REF reads in tumor:",params["editdistance",]-1),
+  paste("Maximum VAF in normal:",params["maxvafnormal",]),
+  paste("Minimum VAF in tumor:",params["minvaftumor",]),
+  paste("Maximum OAF in tumor:",params["maxoaftumor",]),
+  paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
+  paste("Maximum proportion of bad orientation reads in normal:",params["maxbadorient",])))
+rownames(filterheader)=filtercols
+  
+  
+
 
 #2 Assign these to the relevant slot of the VCF
 fixed(header(invcf))$FILTER=filterheader
 
 ## Write the finalized VCF
-writeVcf(invcf,filename=paste0(resultsdir,"/filtered.results.vcf"))
+writeVcf(invcf,filename=paste0(resultsdir,"/filtered.results.",thetime,".vcf"))
+

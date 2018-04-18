@@ -62,17 +62,17 @@ filterminimumdepth=function(exome,minimumdepth){
   
   ## Plots for this filter
   xlims=range(pretty(exome$depth.tumor,nclass.Sturges(exome$depth.tumor)))
-  hist(exome$depth.tumor,breaks=100,main="Minimum depth (tumor)",xlim=xlims)
+  hist(exome$depth.tumor,breaks=100,main="Minimum depth (tumor)",xlim=xlims,xlab="Depth")
   par(new=T)
-  plot(density(exome$depth.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$depth.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumdepth,lwd=2,col="black",lty=2)
 
   xlims=range(pretty(exome$depth.normal,nclass.Sturges(exome$depth.normal)))
-  hist(exome$depth.normal,breaks=100,main="Minimum depth (normal)",xlim=xlims)
+  hist(exome$depth.normal,breaks=100,main="Minimum depth (normal)",xlim=xlims,xlab="Depth")
   par(new=T)
-  plot(density(exome$depth.normal,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$depth.normal,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumdepth,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -89,17 +89,17 @@ filtermaximumdepth=function(exome,maxdepth){
   
   ## Plots for this filter
   xlims=range(pretty(exome$depth.tumor,nclass.Sturges(exome$depth.tumor)))
-  hist(exome$depth.tumor,breaks=100,main="Maximum depth (tumor)",xlim=xlims)
+  hist(exome$depth.tumor,breaks=100,main="Maximum depth (tumor)",xlim=xlims,xlab="Depth")
   par(new=T)
-  plot(density(exome$depth.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$depth.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maxdeptht,lwd=2,col="black",lty=2)
 
   xlims=range(pretty(exome$depth.normal,nclass.Sturges(exome$depth.normal)))
-  hist(exome$depth.normal,breaks=100,main="Maximum depth (normal)",xlim=xlims)
+  hist(exome$depth.normal,breaks=100,main="Maximum depth (normal)",xlim=xlims,xlab="Depth")
   par(new=T)
-  plot(density(exome$depth.normal,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$depth.normal,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maxdepthn,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -112,10 +112,10 @@ filterminaltcount=function(exome,minimumaltcount){
   
   ## Plots for this filter
   xlims=range(pretty(exome$altcount.tumor,nclass.Sturges(exome$altcount.tumor)))
-  hist(exome$altcount.tumor,breaks=100,main="Minimum ALT count (tumor)",xlim=xlims)
+  hist(exome$altcount.tumor,breaks=100,main="Minimum ALT count (tumor)",xlim=xlims,xlab="ALT count")
   par(new=T)
-  plot(density(exome$altcount.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$altcount.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumaltcount,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -138,24 +138,24 @@ filterminbasequality=function(exome,minimumbaseq){
   
   ## Plots for this filter
   xlims=range(pretty(exome$medianbaseqalt.tumor,nclass.Sturges(exome$medianbaseqalt.tumor)))
-  hist(exome$medianbaseqalt.tumor,breaks=100,main="Minimum base quality for ALT (tumor)",xlim=xlims)
+  hist(exome$medianbaseqalt.tumor,breaks=100,main="Minimum base quality for ALT (tumor)",xlim=xlims,xlab="Base quality")
   par(new=T)
-  plot(density(exome$medianbaseqalt.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$medianbaseqalt.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumbaseq,lwd=2,col="black",lty=2)
 
   xlims=range(pretty(exome$medianbaseqref.tumor,nclass.Sturges(exome$medianbaseqref.tumor)))
-  hist(exome$medianbaseqref.tumor,breaks=100,main="Minimum base quality for REF (tumor)",xlim=xlims)
+  hist(exome$medianbaseqref.tumor,breaks=100,main="Minimum base quality for REF (tumor)",xlim=xlims,xlab="Base quality")
   par(new=T)
-  plot(density(exome$medianbaseqref.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$medianbaseqref.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumbaseq,lwd=2,col="black",lty=2)
-  
+
   xlims=range(pretty(exome$medianbaseqref.normal,nclass.Sturges(exome$medianbaseqref.normal)))
-  hist(exome$medianbaseqref.normal,breaks=100,main="Minimum base quality for REF (normal)",xlim=xlims)
+  hist(exome$medianbaseqref.normal,breaks=100,main="Minimum base quality for REF (normal)",xlim=xlims,xlab="Base quality")
   par(new=T)
-  plot(density(exome$medianbaseqref.normal,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$medianbaseqref.normal,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimumbaseq,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -173,19 +173,19 @@ filterzeroproportion=function(exome,zeroproportion){
 
   ## Plots for this filter
   xlims=range(pretty(exome$zerospersite.tumor,nclass.Sturges(exome$zerospersite.tumor)))
-  hist(exome$zerospersite.tumor,breaks=100,main="Proportion of zero mapq reads (tumor)",xlim=xlims)
+  hist(exome$zerospersite.tumor,breaks=100,main="Proportion of zero mapq reads (tumor)",xlim=xlims,xlab="Proportion of zero mapq reads")
   par(new=T)
-  plot(density(exome$zerospersite.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$zerospersite.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=zeroproportion,lwd=2,col="black",lty=2)
-  
+
   xlims=range(pretty(exome$zerospersite.normal,nclass.Sturges(exome$zerospersite.normal)))
-  hist(exome$zerospersite.normal,breaks=100,main="Proportion of zero mapq reads (normal)",xlim=xlims)
+  hist(exome$zerospersite.normal,breaks=100,main="Proportion of zero mapq reads (normal)",xlim=xlims,xlab="Proportion of zero mapq reads")
   par(new=T)
-  plot(density(exome$zerospersite.normal,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$zerospersite.normal,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=zeroproportion,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
@@ -198,13 +198,12 @@ filterstrandbias=function(exome,maximumstrandbias){
   ## Pick up NA values.  Pass anything that didn't calculate
   exome$filter.sb.tenpc.tumor[is.na(exome$filter.sb.tenpc.tumor)]=TRUE
   
-  
   ## Plots for this filter
   xlims=range(pretty(exome$sb.tumor,nclass.Sturges(exome$sb.tumor)))
-  hist(exome$sb.tumor,breaks=100,main="Strand bias (top 10%) (tumor)",xlim=xlims)
+  hist(exome$sb.tumor,breaks=100,main="Strand bias (top 10%) (tumor)",xlim=xlims,xlab="Strand bias")
   par(new=T)
-  plot(density(exome$sb.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$sb.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=quantile(exome$sb.tumor,prob=0.9,na.rm=T),lwd=2,col="black",lty=2)
 
   return(exome)
@@ -220,12 +219,12 @@ filterminmapquality=function(exome,minimummapq){
   
   ## Plots for this filter
   xlims=range(pretty(exome$medianmapqalt.tumor,nclass.Sturges(exome$sb.tumor)))
-  hist(exome$medianmapqalt.tumor,breaks=100,main="Minimum median mapping quality (tumor)",xlim=xlims)
+  hist(exome$medianmapqalt.tumor,breaks=100,main="Minimum median mapping quality (tumor)",xlim=xlims,xlab="Mapping quality")
   par(new=T)
-  plot(density(exome$medianmapqalt.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$medianmapqalt.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=minimummapq,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
@@ -240,10 +239,10 @@ filterminmapqualitydifference=function(exome,maximumdifference){
   
   ## Plots for this filter
   xlims=range(pretty(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal),nclass.Sturges(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal))))
-  hist(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal),breaks=100,main="Maximum median mapping quality difference (tumor/normal)",xlim=xlims)
+  hist(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal),breaks=100,main="Maximum median mapping quality difference (tumor/normal)",xlim=xlims,xlab="Mapping quality difference")
   par(new=T)
-  plot(density(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal),na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(abs(exome$medianmapqalt.tumor-exome$medianmapqref.normal),na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maximumdifference,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -259,10 +258,10 @@ filterenddistance=function(exome,distance){
   
   ## Plots for this filter
   xlims=range(pretty(exome$shortestdistancetoendmedian.tumor,nclass.Sturges(exome$shortestdistancetoendmedian.tumor)))
-  hist(exome$shortestdistancetoendmedian.tumor,breaks=100,main="Shortest median distance to end of read (tumor)",xlim=xlims)
+  hist(exome$shortestdistancetoendmedian.tumor,breaks=100,main="Shortest median distance to end of read (tumor)",xlim=xlims,xlab="Median distance to end of read")
   par(new=T)
-  plot(density(exome$shortestdistancetoendmedian.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$shortestdistancetoendmedian.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=distance,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -278,10 +277,10 @@ filterenddistancemad=function(exome,mad){
   
   ## Plots for this filter
   xlims=range(pretty(exome$madaltshort.tumor,nclass.Sturges(exome$madaltshort.tumor)))
-  hist(exome$madaltshort.tumor,breaks=100,main="MAD of shortest median distance to end of read (tumor)",xlim=xlims)
+  hist(exome$madaltshort.tumor,breaks=100,main="MAD of shortest median distance to end of read (tumor)",xlim=xlims,xlab="MAD of median distance to end of read")
   par(new=T)
-  plot(density(exome$madaltshort.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$madaltshort.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=mad,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -299,17 +298,17 @@ filtereditdistance=function(exome,editdistance){
   
   ## Plots for this filter
   xlims=range(pretty(exome$altld.tumor,nclass.Sturges(exome$altld.tumor)))
-  hist(exome$altld.tumor,breaks=100,main="Maximum edit distance between ALT reads and ref genome (tumor)",xlim=xlims)
+  hist(exome$altld.tumor,breaks=100,main="Maximum edit distance between ALT reads and ref genome (tumor)",xlim=xlims,xlab="Edit distance")
   par(new=T)
-  plot(density(exome$altld.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$altld.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=editdistance,lwd=2,col="black",lty=2)
 
   xlims=range(pretty(exome$refld.tumor,nclass.Sturges(exome$refld.tumor)))
-  hist(exome$refld.tumor,breaks=100,main="Maximum edit distance between REF reads and ref genome (tumor)",xlim=xlims)
+  hist(exome$refld.tumor,breaks=100,main="Maximum edit distance between REF reads and ref genome (tumor)",xlim=xlims,xlab="Edit distance")
   par(new=T)
-  plot(density(exome$refld.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$refld.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=editdistance-1,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -325,10 +324,10 @@ filtermaxvafnormal=function(exome,vaf){
   
   ## Plots for this filter
   xlims=range(pretty(exome$vaf.normal,nclass.Sturges(exome$vaf.normal)))
-  hist(exome$vaf.normal,breaks=100,main="Maximum VAF (normal)",xlim=xlims)
+  hist(exome$vaf.normal,breaks=100,main="Maximum VAF (normal)",xlim=xlims,xlab="VAF")
   par(new=T)
-  plot(density(exome$vaf.normal,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$vaf.normal,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=vaf,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -344,10 +343,10 @@ filterminvaftumor=function(exome,vaf){
   
   ## Plots for this filter
   xlims=range(pretty(exome$vaf.tumor,nclass.Sturges(exome$vaf.tumor)))
-  hist(exome$vaf.tumor,breaks=100,main="Minimum VAF (tumor)",xlim=xlims)
+  hist(exome$vaf.tumor,breaks=100,main="Minimum VAF (tumor)",xlim=xlims,xlab="VAF")
   par(new=T)
-  plot(density(exome$vaf.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$vaf.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=vaf,lwd=2,col="black",lty=2)
 
   return(exome)
@@ -363,12 +362,12 @@ filtermaxoaftumor=function(exome,vaf){
   
   ## Plots for this filter
   xlims=range(pretty(exome$oaf.tumor,nclass.Sturges(exome$oaf.tumor)))
-  hist(exome$oaf.tumor,breaks=100,main="Maximum OAF (tumor)",xlim=xlims)
+  hist(exome$oaf.tumor,breaks=100,main="Maximum OAF (tumor)",xlim=xlims,xlab="OAF")
   par(new=T)
-  plot(density(exome$oaf.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$oaf.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
     abline(v=vaf,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
@@ -382,12 +381,12 @@ filtermaxaltsecondtumor=function(exome,maxsecond){
   
   ## Plots for this filter
   xlims=range(pretty(exome$altsecondprop.tumor,nclass.Sturges(exome$altsecondprop.tumor)))
-  hist(exome$altsecondprop.tumor,breaks=100,main="Maximum secondary alignments (tumor)",xlim=xlims)
+  hist(exome$altsecondprop.tumor,breaks=100,main="Maximum secondary alignments (tumor)",xlim=xlims,xlab="Proportion of secondary alignments")
   par(new=T)
-  plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maxsecond,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
@@ -403,16 +402,19 @@ filtermaxrefbadorientnormal=function(exome,maxbadorient){
   
   ## Plots for this filter
   xlims=range(pretty(exome$refbadorientationprop.normal,nclass.Sturges(exome$refbadorientationprop.normal)))
-  hist(exome$refbadorientationprop.normal,breaks=100,main="Maximum bad orientation REF reads (normal)",xlim=xlims)
+  hist(exome$refbadorientationprop.normal,breaks=100,main="Maximum bad orientation REF reads (normal)",xlim=xlims,xlab="Proporotion of bad orientation reads")
   par(new=T)
-  plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maxbadorient,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
-#################### Maximum bad orientation allowed in REF reads in normal ############
+
+## Unused/developing filters
+
+#################### Maximum contigs in REF reads in normal ############
 #The maximum number of contigs in REF reads in the normal is 3
 #Unmapped reads or a stray mismapped read are fine; 4 or more suggests
 #that the region is poorly mappable or frequently mismapped
@@ -424,12 +426,12 @@ filtermaxrefcontignormal=function(exome,maxcontig){
   
   ## Plots for this filter
   xlims=range(pretty(exome$refmatecontigcount.normal,nclass.Sturges(exome$refmatecontigcount.normal)))
-  hist(exome$refmatecontigcount.normal,breaks=100,main="Maximum contigs in REF reads (normal)",xlim=xlims)
+  hist(exome$refmatecontigcount.normal,breaks=100,main="Maximum contigs in REF reads (normal)",xlim=xlims,xlab="Number of contigs present")
   par(new=T)
-  plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
-       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
+  try(plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
+       main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
   abline(v=maxcontig,lwd=2,col="black",lty=2)
-  
+
   return(exome)
 }
 
