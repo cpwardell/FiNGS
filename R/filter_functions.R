@@ -210,7 +210,7 @@ filterstrandbias=function(exome,maximumstrandbias){
 }
 
 #################### Minimum mapping quality score ############
-## Median mapping quality of alt reads in the tumor must be greater than 40
+## Median mapping quality of alt reads in the tumor must be greater than 50
 filterminmapquality=function(exome,minimummapq){
   exome$filter.medianmapqalt.minimum.tumor=(exome$medianmapqalt.tumor>=minimummapq)
   

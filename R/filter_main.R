@@ -103,14 +103,14 @@ filterheader=data.frame(Description=c(
   paste("Minimum median mapping quality of ALT reads in tumor:",params["minmapquality",]),
   paste("Maximum difference between median mapping quality of ALT reads in tumor and REF reads in normal:",params["minmapqualitydifference",]),
   paste("Maximum median shortest distance to either aligned end in tumor:",params["enddistance",]),
-  paste("Maximum MAD of ALT position in tumor:",params["enddistancemad",]),
+  paste("Minimum MAD of ALT position in tumor:",params["enddistancemad",]),
   paste("Maximum edit distance of ALT reads in tumor:",params["editdistance",]),
   paste("Maximum edit distance of REF reads in tumor:",params["editdistance",]-1),
   paste("Maximum VAF in normal:",params["maxvafnormal",]),
   paste("Minimum VAF in tumor:",params["minvaftumor",]),
   paste("Maximum OAF in tumor:",params["maxoaftumor",]),
   paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
-  paste("Maximum proportion of bad orientation reads in normal:",params["maxbadorient",])))
+  paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",])))
 rownames(filterheader)=filtercols
   
   
