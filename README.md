@@ -137,8 +137,9 @@ A high proportion of zero mapping quality reads suggests a region with poorly ma
 A high proportion of zero mapping quality reads suggests a region with poorly mappability.
 
 11. **Strand bias exclusion proportion**.  Default value is 0.1.  
-Strand bias is defined below [(Guo et al., 2012)](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-666) where a,c represent the forward and reverse strand allele counts of REF reads and b,d represent the forward and reverse strand allele counts of ALT reads.  The topmost proportion of biased variants is removed.
-|b/(a+b)-d/(c+d)|/ ((b+d)/(a+b+c+d))
+Strand bias is defined below [(Guo et al., 2012)](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-666) where a,c represent the forward and reverse strand allele counts of REF reads and b,d represent the forward and reverse strand allele counts of ALT reads.  The topmost proportion of biased variants is removed. Note that this is not the GATK strand bias, which is calculated differently.  
+Strand bias: |b/(a+b)-d/(c+d)|/ ((b+d)/(a+b+c+d))  
+GATK strand bias: max(((b/(a+b))&ast;(c/(c+d)))/((a+c)/(a+b+c+d)),((d/(c+d))&ast;(a/(a+b)))/((a+c)/(a+b+c+d)))
 
 12. **Minimum median mapping quality of ALT reads in tumor**.  Default value is 50.  
 Excludes variants where the supporting reads in the tumor have low mapping quality.  Taking the median of all reads would allow non-variant reads to weight the median mapping quality.
@@ -176,62 +177,61 @@ Excludes variants with a high proportion of reads in the normal sample that have
 
 ## Dictionary of values reported in the metrics files
 The `filtered.results.date.txt` output file is the `normal.combined.txt` and `tumor.combined.txt` files joined by column, with additional columns for each filter containing TRUE/FALSE for whether or not that variant passed that filter. Each row is a single variant.  
-Column names are delimited by full stops (periods). The first half defines the data type and the second the source. For example, depth.tumor and depth.normal contain the depth of a variant for the tumor and normal respectively.
+Column names are delimited by full stops (periods). The first half defines the data type and the second the source. For example, `depth.tumor` and `depth.normal` contain the depth of a variant in the tumor and normal BAM files respectively.  
+Non-integer values are rounded to 3 decimal places. Not all of the values reported are used for filtering.
 
 
 Column | Description | Example
 --- | --- | ---
-**UID** | Thingsly | blah
-**CHR** | Thingsly | blah
-**POS** | Thingsly | blah
-**REF** | Thingsly | blah
-**ALT** | Thingsly | blah
-
-
-refcount
-altcount
-varianttype
-depth
-vaf
-raf
-oaf
-medianbaseq
-medianbaseqref
-medianbaseqalt
-medianmapq
-medianmapqref
-medianmapqalt
-zeros
-zerospersite
-softreadlengthsrefmean
-softreadlengthsaltmean
-goodoffsetproportion
-distancetoend1median
-mad1
-distancetoend2median
-mad2
-distancetoend1medianref
-madref1
-distancetoend2medianref
-madref2
-distancetoend1medianalt
-madalt1
-distancetoend2medianalt
-madalt2
-shortestdistancetoendmedian
-madaltshort
-sb
-gsb
-fishp
-FoxoG
-refld
-altld
-refsecondprop
-altsecondprop
-refbadorientationprop
-altbadorientationprop
-refmatecontigcount
-altmatecontigcount
+**UID** | Unique Identifier for variant | 1:14677:G:A
+**CHR** | Chromosome | 1
+**POS** | Position on chromsome | 14677
+**REF** | Reference allele | G
+**ALT** | Alternate allele | A
+**refcount** | Count of REF alleles | 22
+**altcount** | Count of ALT alleles | 7
+**varianttype** | SNV or INDEL | SNV
+**depth** | Depth of all reads | 29
+**vaf** | Variant Allele Frequency (altcount/depth) | 0.241
+**raf** | Reference Allele Frequency (refcount/depth) | 0.759
+**oaf** | Other Allele Frequency ((depth-altcount-refcount)/depth) | 0
+**medianbaseq** | Median base quality (all reads) | 36
+**medianbaseqref** | Median base quality (REF reads only) | 36
+**medianbaseqalt** | Median base quality (ALT reads only) | 36
+**medianmapq** | Median mapping quality (all reads) | 3
+**medianmapqref** | Median mapping quality (REF reads only) | 11.5
+**medianmapqalt** | Median mapping quality (ALT reads only) | 3
+**zeros** | Total number of zero mapping quality reads | 13
+**zerospersite** | Proportion of reads that have zero mapping quality | 0.448
+**softreadlengthsrefmean** | Mean length of REF reads after soft clipping | 75.864
+**softreadlengthsaltmean** | Mean length of ALT reads after soft clipping | 76
+**goodoffsetproportion** | Proportion of variants that occur within the first 2/3rd of the mean read length | 0.897
+**distancetoend1median** | Median distance to lefthand soft-clipped read end (all reads) | 27
+**mad1** | Median absolute deviation of distancetoend1median | 10
+**distancetoend2median** | Median distance to righthand soft-clipped read end (all reads) | 48
+**mad2** | Median absolute deviation of distancetoend2median | 10
+**distancetoend1medianref** | Median distance to lefthand soft-clipped read end (REF reads only) | 26.5
+**madref1** | Median absolute deviation of distancetoend1medianref | 7.5
+**distancetoend2medianref** | Median distance to righthand soft-clipped read end (REF reads only) | 48
+**madref2** | Median absolute deviation of distancetoend2medianref | 7.5
+**distancetoend1medianalt** | Median distance to lefthand soft-clipped read end (ALT reads only) | 27
+**madalt1** | Median absolute deviation of distancetoend1medianalt | 10
+**distancetoend2medianalt** | Median distance to righthand soft-clipped read end (ALT reads only) | 48
+**madalt2** | Median absolute deviation of distancetoend2medianalt | 10
+**shortestdistancetoendmedian** | Median of shortest distance of distancetoend1alt and distancetoend2alt | 20
+**madaltshort** | Median absolute deviation of shortestdistancetoendmedian | 12
+**sb** | Strand bias, see definition above | 0.207
+**gsb** | GATK strand bias, see definition above | 0.264
+**fishp** | P value for Fisher's exact test for strand bias | 1
+**FoxoG** | Oxoguanine artifact score, only calculated for C>A or G>T mutations, defined in [Costello et al, 2013](https://academic.oup.com/nar/article/41/6/e67/2902364) | NA
+**refld** | Edit distance for REF reads | 0
+**altld** | Edit distance for ALT reads | 2
+**refsecondprop** | Proportion of REF reads that have secondary alignments | 0
+**altsecondprop** | Proportion of ALT reads that have secondary alignments | 0
+**refbadorientationprop** | Proportion of REF reads with an inverted orientation | 0.045
+**altbadorientationprop** | Proportion of ALT reads with an inverted orientation | 0
+**refmatecontigcount** | Number of contigs seen in REF reads | 1
+**altmatecontigcount** | Number of contigs seen in ALT reads | 1
 
 
 
