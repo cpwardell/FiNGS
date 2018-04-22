@@ -23,23 +23,13 @@
 
 #### TO DO LIST #########################################
 
-## DONE !!! Clean-up option; delete intermediate "chunks"
-## DONE !!! Test for existing output and run R stage only
-## DONE !!! R should run silently (i.e. suppress messages)
-## DONE !!! Option to only use "PASS" results from variant caller "--PASSonlyin" option
-## DONE !!! R should output either a complete VCF or just PASSed results; "--PASSonlyout" option
-## DONE !!! R should output graphs for each filter
-## DONE !!! VCF header uses input parameters to label filters
-## DONE !!! Print command line invocation to log file
-## DONE !!! Allow passing in a parameter file when FiNGS is invoked
-
 ## Do not gzip the pre-R output; read.table sometimes crashes in R
 
-## Docker build file
-## Write alignability filter
-## Write ontarget filter
-## Write foxog filter
-## Write a decent readme.md file for github
+## Tumor-only (single BAM) mode
+## Enable alignability filter
+## Enable ontarget filter
+## Enable foxog filter
+## Complete Docker integration (build file)
 
 #### END OF TO DO LIST #########################################
 
