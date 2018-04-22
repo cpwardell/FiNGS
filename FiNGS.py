@@ -75,7 +75,7 @@ parser.add_argument("-d", type=str, help="absolute path to output directory",req
 parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
 parser.add_argument("-c", type=int, help="number of records to process per chunk",required=False,default=100)
 parser.add_argument("-m", type=int, help="maximum read depth to process",required=False,default=1000)
-parser.add_argument("-j", type=int, help="number of threads to use (set to -1 to use all available threads)",required=False,default=1)
+parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)",required=False,default=-1)
 parser.add_argument("--logging", help="Set logging level (default is INFO, can be DEBUG for more detail or NOTSET for silent)",required=False,default="INFO")
 parser.add_argument("--donotcleanup", help="Keep intermediate files (not recommended, will keep intermediate chunks)",required=False,default=False,action='store_true')
 parser.add_argument("--overwrite", help="Overwrite previous results if they exist?",required=False,default=False,action='store_true')

@@ -1,6 +1,6 @@
 # FiNGS
 
-## Quickstart guide
+## Quickstart guide, with test and example data
 
 Full installation instructions and documentation are below, but the fastest way to get up and running is:
 ```
@@ -11,6 +11,13 @@ sudo ./install_FiNGS_dependencies.sh
 python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf
 ```
 
+You can test that your installation works using some example data in the included `exampledata` directory. It contains a VCF and two indexed BAM files. 
+```
+cd exampledata
+python3 ../FiNGS.py -n 24385-200.bam -t 24385-12878.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
+```
+You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the various outputs.
+
 ## Suggested usage
 + Use default filtering thresholds
 + Use every available processor
@@ -18,7 +25,7 @@ python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somati
 + Only emit variants that PASS all filters  
 
 ```
-python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf -j -1 --PASSonlyin --PASSonlyout
+python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf --PASSonlyin --PASSonlyout
 ```
 
 ## Introduction
@@ -86,11 +93,10 @@ All intermediate chunks of the tumor BAM file analysis are combined into this fi
 + **-t** Required; path to the tumor BAM file used to produce the VCF  
 + **-n** Required; path to the normal BAM file used to produce the VCF  
 + **-d** Optional; path to output directory.  Default is to create a directory called "results" in the current working directory
-+ **-p** Optional; path to file specifying filtering parameters.  Details on filters and default values is provided below
-Default is a file located at `FiNGS/R/filter_parameters.txt`.  To alter these parameters, copy and edit this file, and provide a path to it
++ **-p** Optional; path to file specifying filtering parameters. Details on filters and default values is provided below. Default is a file located at `FiNGS/R/filter_parameters.txt`.  To alter these parameters, copy and edit this file, and provide a path to it
 + **-c** Optional; chunk size, the number of records to process per chunk. Default is 100
 + **-m** Optional; maximum read depth. Reads beyond this depth will be ignored and a warning emitted to the log file.Default is 1000 
-+ **-j** Optional; number of processors to use. Use -1 to use all available. Default is 1 
++ **-j** Optional; number of processors to use. -1 uses all available. Default is -1 
 + **--logging** Optional; change logging level. Default is INFO, can be DEBUG for more detail or NOTSET for silent
 + **--donotcleanup** Optional; do not delete intermediate files  
 + **--overwrite** Optional; allow overwriting of existing results if rerunning  
