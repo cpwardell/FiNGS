@@ -14,7 +14,7 @@ python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somati
 You can test that your installation works using some example data in the included `exampledata` directory. It contains a VCF and two indexed BAM files. 
 ```
 cd exampledata
-python3 ../FiNGS.py -n 24385-200.bam -t 24385-12878.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
+python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 ```
 You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the various outputs.
 
