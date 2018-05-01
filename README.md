@@ -1,8 +1,10 @@
 # FiNGS
 
-## Quickstart guide, with test and example data
+## Quickstart guide, with example data and test
 
-Full installation instructions and documentation are below, but the fastest way to get up and running is:
+You have two options for installing and running FiNGS; a standalone installation or Docker.
+
+### Standalone installation
 ```
 git clone https://github.com/cpwardell/FiNGS.git
 cd FiNGS
@@ -17,6 +19,30 @@ cd exampledata
 python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 ```
 You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the various outputs.
+
+### Docker installation
+This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on Ubuntu 16.04. 
+You need to get a copy of the Dockerfile in this repository; below I use "wget" on Linux to download it, but you could just as easily 
+copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows.
+
+```
+# Download the Dockerfile from this address:
+wget https://raw.githubusercontent.com/cpwardell/FiNGS/master/Dockerfile
+# Build the image and call it "FiNGS"
+docker build -t FiNGS .
+```
+
+You can test that your image works by running a container interactively:
+```
+docker run -it FiNGS
+cd /FiNGS/exampledata
+python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
+```
+
+When you run it on your own data, you can mount the location of your files like so. This would output a results directory in the directory the command was executed
+```
+docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local FiNGS /bin/bash -c   "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
+```
 
 ## Suggested usage
 + Use default filtering thresholds
