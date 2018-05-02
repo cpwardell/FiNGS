@@ -1,10 +1,18 @@
 # FiNGS
 
-## Quickstart guide, with example data and test
+## Introduction
+Somatic variant callers detect differences between sequencing data produced from matched tumor-normal pairs aligned to a reference genome. Confounding factors such as purity of the samples, artifacts introduced by sequencing chemistry, the alignment algorithm and the incomplete and repetitive nature of reference genomes all lead to variant calls that are extremely rich in false positives.  
+It has become common practice for sequencing studies to attempt to ameliorate these effects using a variety of filtering techniques, including taking the intersect of results from multiple variant callers and employing some post-calling filtering. This ad-hoc filtering varies greatly between laboratories.  Attempts have been made to standardize the methodology of this filtering, with recommendations produced by the International Cancer Genome Consortium (ICGC) [(Alioto et al., 2015)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4682041/).  
+We have developed Filters for Next Generation Sequencing (FiNGS), software written specifically to address these filtering issues. FiNGS can be used in addition to the default filters of somatic variant callers to substantially increase the precision of results, providing high quality variants for further analysis.
 
+## Availability
+FiNGS is released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS).
+
+## Quickstart guide, with example data and test
 You have two options for installing and running FiNGS; a standalone installation or Docker.
 
 ### Standalone installation
+A more advanced guide is below. Briefly:
 ```
 git clone https://github.com/cpwardell/FiNGS.git
 cd FiNGS
@@ -23,7 +31,8 @@ You should see the progress printed to the screen. When filtering is complete, a
 ### Docker installation
 This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on Ubuntu 16.04. 
 You need to get a copy of the Dockerfile in this repository; below I use "wget" on Linux to download it, but you could just as easily 
-copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows.
+copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows
+and assume that you're in the same directory as the dockerfile named "Dockerfile".
 
 ```
 # Download the Dockerfile from this address:
@@ -39,9 +48,9 @@ cd /FiNGS/exampledata
 python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 ```
 
-When you run it on your own data, you can mount the location of your files like so. This would output a results directory in the directory the command was executed
+When you run it on your own data, you can mount the location of your files like so. This would output a results directory in the directory the command was executed in
 ```
-docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local FiNGS /bin/bash -c   "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
+docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local FiNGS /bin/bash -c "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
 ```
 
 ## Suggested usage
@@ -54,13 +63,7 @@ docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normal
 python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf --PASSonlyin --PASSonlyout
 ```
 
-## Introduction
-
-
-## Availability
-FiNGS is released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS).
-
-## Installation
+## Advanced standalone installation guide
 FiNGS depends on Python3, R, and several modules/packages for each.  The included script `FiNGS/install_FiNGS_dependencies.sh` should install all dependencies, but this can be manually performed as below.
 
 On Debian-based systems such as Ubuntu, you can install Python3 and pip, the recommended tool for installing Python packages using the following commands:
@@ -237,7 +240,7 @@ Column | Description | Example
 **zerospersite** | Proportion of reads that have zero mapping quality | 0.448
 **softreadlengthsrefmean** | Mean length of REF reads after soft clipping | 75.864
 **softreadlengthsaltmean** | Mean length of ALT reads after soft clipping | 76
-**goodoffsetproportion** | Proportion of variants that occur within the first 2/3rd of the mean read length | 0.897
+**goodoffsetproportion** | Proportion of variants that occur within the first 2/3rds of the mean read length | 0.897
 **distancetoend1median** | Median distance to lefthand soft-clipped read end (all reads) | 27
 **mad1** | Median absolute deviation of distancetoend1median | 10
 **distancetoend2median** | Median distance to righthand soft-clipped read end (all reads) | 48
