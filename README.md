@@ -37,8 +37,8 @@ and assume that you're in the same directory as the dockerfile named "Dockerfile
 ```
 # Download the Dockerfile from this address:
 wget https://raw.githubusercontent.com/cpwardell/FiNGS/master/Dockerfile
-# Build the image and call it "FiNGS"
-docker build -t FiNGS .
+# Build the image and call it "fings" (lowercase)
+docker build -t fings .
 ```
 
 You can test that your image works by running a container interactively:
