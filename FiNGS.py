@@ -94,11 +94,15 @@ njobs=args.j
 
 ## Create directory to put results in
 ## Trycatch prevents exception if directory alr exists or location is unwritable 
+#################################################################################################################
+sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
+#################################################################################################################
 try:
 	os.mkdir(resultsdir)
 except Exception as e:
-	#logging.debug("WARNING: error creating results directory: "+str(e))
-	pass
+	print("CRITICAL ERROR: results directory could not be created: "+str(e))
+	print("If using Docker, the current directory must be writeable by any user")
+	sys.exit()
 
 ## Set logging to desired level
 if(args.logging=="INFO"):
