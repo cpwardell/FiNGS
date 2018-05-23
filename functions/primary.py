@@ -252,14 +252,14 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
       ## Equation is: ALT_F1R2/(ALT_F1R2 + ALT_F2R1) or ALT_F2R1/(ALT_F1R2 + ALT_F2R1)
       ## C>anything or A>anything:  numerator is ALT_F2R1
       ## G>anything or T>anything:  numerator is ALT_F1R2
-      if((variant.REF=="C" and str(variant.ALT[0])=="A") or (variant.REF=="G" and str(variant.ALT[0])=="T")):
-        ## If sum of F1R2 and F2R1 is zero, all reads have an indel in them, so it should be removed
-        if((F1R2 + F2R1)!=0):
-          if(variant.REF=="C"):
-            FoxoG = F2R1/(F1R2 + F2R1)
-          if(variant.REF=="G"):
-            FoxoG = F1R2/(F1R2 + F2R1)
-          FoxoG=round(FoxoG,3)
+      #if((variant.REF=="C" and str(variant.ALT[0])=="A") or (variant.REF=="G" and str(variant.ALT[0])=="T")):
+      ## If sum of F1R2 and F2R1 is zero, all reads have an indel in them, so it should be removed
+      if((F1R2 + F2R1)!=0):
+        if(variant.REF=="C" or variant.REF=="A"):
+          FoxoG = F2R1/(F1R2 + F2R1)
+        if(variant.REF=="G" or variant.REF=="T"):
+          FoxoG = F1R2/(F1R2 + F2R1)
+        FoxoG=round(FoxoG,3)
         ## If FoxoG is still "NA" at this point, it must be rubbish, so set it to 1
         #if(FoxoG=="NA"):
         #  FoxoG=1
