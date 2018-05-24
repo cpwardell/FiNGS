@@ -29,7 +29,6 @@
 ## Enable alignability filter
 ## Enable ontarget filter
 ## Enable foxog filter
-## Complete Docker integration (build file)
 
 #### END OF TO DO LIST #########################################
 
@@ -141,12 +140,8 @@ logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
 logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
 
 ## Define filename prefixes for output..
-tbasename = os.path.basename(tbampath)
-#tfilename = os.path.splitext(tbasename)[0]
 tfilename = "tumor"
-#nbasename = os.path.basename(nbampath) 
-nbasename = "normal"
-nfilename = os.path.splitext(nbasename)[0]
+nfilename = "normal"
 
 ## Check for existing data; if they exist, skip straight to the R filtering phase
 tdata=resultsdir+"/"+tfilename+".combined.txt"
@@ -198,8 +193,9 @@ if(args.overwrite or (not os.path.exists(ndata) and not os.path.exists(tdata))):
 			os.remove(resultsdir+"/"+tfilename+"."+str(i+1)+".txt")
 
 	## Compress all output
+	## Do not gzip the pre-R output; read.table sometimes crashes in R
 	#logging.debug("Compressing all output")
-	#subprocess.call("gzip *txt", shell=True)
+	#subprocess.call("gzip *txt", shell=True) 
 
 	if(nvcflines==tdatacount==ndatacount):
 		logging.debug("VCF, tumor data and normal data all contain "+str(nvcflines)+" lines")
