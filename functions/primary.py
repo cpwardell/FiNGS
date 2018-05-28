@@ -508,6 +508,8 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
       str(sb)+"\t"+\
       str(gsb)+"\t"+\
       str(fishp)+"\t"+\
+      str(F1R2)+"\t"+\
+      str(F2R1)+"\t"+\
       str(FoxoG)+"\t"+\
       str(refld)+"\t"+\
       str(altld)+"\t"+\

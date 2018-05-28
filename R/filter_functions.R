@@ -12,7 +12,7 @@ filterreader=function(pathtotumor,pathtonormal){
            "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
            "distancetoend1median","mad1","distancetoend2median","mad2","distancetoend1medianref","madref1",
            "distancetoend2medianref","madref2","distancetoend1medianalt","madalt1","distancetoend2medianalt",
-           "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp","FoxoG","refld","altld",
+           "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp","F1R2","F2R1","FoxoG","refld","altld",
            "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
            "altmatecontigcount")
   tumor=read.table(pathtotumor,header=F,stringsAsFactors=F)  
