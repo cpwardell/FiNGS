@@ -58,7 +58,7 @@ parser.add_argument("-v", type=str, help="absolute path to VCF file",required=Tr
 parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
 parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
 #parser.add_argument("-a", type=str, help="absolute path to alignability track",required=False)
-#parser.add_argument("-b", type=str, help="absolute path to BED file",required=False)
+parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
 parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
 parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
 parser.add_argument("-c", type=int, help="number of records to process per chunk",required=False,default=100)
@@ -83,7 +83,7 @@ vcfpath=args.v
 tbampath=args.t
 nbampath=args.n
 #alignabilitytrack=args.a
-#bedfile=args.b
+bedfile=args.b
 resultsdir=args.d
 parameters=args.p
 chunksize=args.c
@@ -91,7 +91,7 @@ maxdepth=args.m
 njobs=args.j
 
 ## Create directory to put results in
-## Trycatch prevents exception if directory alr exists or location is unwritable 
+## Trycatch prevents exception if location is unwritable 
 #################################################################################################################
 sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
 #################################################################################################################
@@ -128,7 +128,7 @@ logging.info("Normal BAM is: "+str(nbampath))
 logging.info("Output directory is: "+str(resultsdir))
 logging.info("Filtering parameter file is: "+str(parameters))
 #logging.info("Alignability file is: "+str(alignabilitytrack))
-#logging.info("Bedfile is: "+str(bedfile))
+logging.info("Bedfile is: "+str(bedfile))
 logging.info("Number of records per chunk is: "+str(chunksize))
 logging.info("Maximum read depth is: "+str(maxdepth))
 logging.info("Processor threads used is: "+str(njobs))
@@ -213,7 +213,7 @@ else:
 codedirectory = os.path.dirname(os.path.realpath(__file__))
 
 logging.info("Launching R script to perform filtering")
-subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout), shell=True)
+subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile), shell=True)
 logging.info("R script complete")
 
 exit()

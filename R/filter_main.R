@@ -1,10 +1,7 @@
 ## This is the main method for running filters
 
-## Load packages
-suppressMessages(library(VariantAnnotation))
-
-## Suppress all warnings
-options(warn=-1)
+## Load packages silently
+suppressMessages(suppressWarnings(library(VariantAnnotation)))
 
 ## Store time script was invoked for output names
 thetime=strftime(Sys.time(),"%Y%m%d%H%M%S")
@@ -19,6 +16,7 @@ pathtonormal=args[5]
 pathtovcf=args[6]
 pass=args[7]
 passonly=args[8]
+bedfile=args[9]
 
 if(parameters=="default"){
   parameters=paste0(codedir,"/R/filter_parameters.txt")
@@ -32,7 +30,6 @@ params=read.table(parameters,header=F,row.names=1)
 
 # Read in mutect data for exome
 pdata=filterreader(pathtotumor,pathtonormal)
-
 
 
 ### Perform filtering
@@ -56,6 +53,7 @@ pdata=filterminvaftumor(pdata,params["minvaftumor",])
 pdata=filtermaxoaftumor(pdata,params["maxoaftumor",])
 pdata=filtermaxaltsecondtumor(pdata,params["maxsecondtumor",])
 pdata=filtermaxrefbadorientnormal(pdata,params["maxbadorient",])
+pdata=filterontarget(pdata,bedfile)
 pdata=filterfoxog(pdata,params["foxog",])
 
 ## Turn off graphics device
@@ -117,7 +115,9 @@ filterheader=data.frame(Description=c(
   paste("Maximum OAF in tumor:",params["maxoaftumor",]),
   paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
   paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",]),
+  paste("Bedfile used:",bedfile),
   paste("FoxoG artefact proportion:",params["foxog",])))
+
 rownames(filterheader)=filtercols
 
 #2 Assign these to the relevant slot of the VCF

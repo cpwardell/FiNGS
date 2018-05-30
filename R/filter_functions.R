@@ -506,4 +506,26 @@ filterfoxog=function(exome,foxog){
   return(exome)
 }
 
+## Filters out any variants that are not in the provided bedfile
+filterontarget=function(exome,bedfile){
+  ## Default is all values pass
+  exome$filter.ontarget=TRUE
+  
+  ## If no bedfile is provided, just return
+  if(is.na(bedfile)){return(exome)}
+ 
+  ## Read in bedfile
+  bed=read.table(bedfile,header=F,stringsAsFactors=F)
+  
+  ## Cast bedfile to genomic ranges object
+  ## We add 1 to the positions because bed files have 0-based coordinates, VCFs are 1-based
+  grbed=GRanges(seqnames=Rle(bed[,1]),ranges=IRanges(bed[,2]+1,end=bed[,3]+1))
+  
+  ## Cast variant coordinates to genomic ranges object
+  grexome = GRanges(seqnames=Rle(exome$CHR.tumor),ranges=IRanges(exome$POS.tumor,end=exome$POS.tumor))
 
+  ## Execute the filter
+  exome$filter.ontarget=grexome%within%grbed
+  
+  return(exome)
+}

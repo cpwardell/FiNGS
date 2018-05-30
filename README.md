@@ -124,7 +124,8 @@ All intermediate chunks of the tumor BAM file analysis are combined into this fi
 + **-d** Optional; path to output directory.  Default is to create a directory called "results" in the current working directory
 + **-p** Optional; path to file specifying filtering parameters. Details on filters and default values is provided below. Default is a file located at `FiNGS/R/filter_parameters.txt`.  To alter these parameters, copy and edit this file, and provide a path to it
 + **-c** Optional; chunk size, the number of records to process per chunk. Default is 100
-+ **-m** Optional; maximum read depth. Reads beyond this depth will be ignored and a warning emitted to the log file.Default is 1000 
++ **-m** Optional; maximum read depth. Reads beyond this depth will be ignored and a warning emitted to the log file. Default is 1000 
++ **-b** Optional; target bed file. Variants not within this bed file will be filtered (the 0-based coordinate system of bed files is accounted for). Default is None
 + **-j** Optional; number of processors to use. -1 uses all available. Default is -1 
 + **--logging** Optional; change logging level. Default is INFO, can be DEBUG for more detail or NOTSET for silent
 + **--donotcleanup** Optional; do not delete intermediate files  
@@ -139,7 +140,7 @@ Run FiNGS with no additional arguments to get the help file.  If there's somethi
 A paper is being prepared for submission shortly and will be referenced here when available.
 
 ## Description of filters
-FiNGS assesses variants using 23 filters.  Below are descriptions of each filter and the default values used.
+FiNGS assesses variants using 24 filters.  Below are descriptions of each filter and the default values used.
  
 1. **Minimum depth in tumor**.  Default value is 10x.  
 This filter excludes variants that do not have adequate sequencing depth in the tumor sample.
@@ -214,6 +215,9 @@ C>A|G>T variants can be oxidation artifacts introduced during library preparatio
 These "OxoG" artifacts have a telltale read orientation, with the majority of ALT reads in the artifact orientation.
 All C>A|G>T variants are classified as being part of two binomial distributions, one centered at 0.5 (50% artifact orientation, 50% non-artifact orientation) and the other at 0.9 (90% artifact orientation reads).
 C>A|G>T variants classified as OxoG are removed. This filter could be switched off if desired by setting a value of 2 or greater (only 0 to 1 values are possible, ensuring all variants would PASS the filter).
+
+24. **Ontarget filter**.  Default bed file in None (i.e. all variants PASS).  
+Excludes variants that are not contained within the regions specified in a bed file.
 
 ## Dictionary of values reported in the metrics files
 The `filtered.results.date.txt` output file is the `normal.combined.txt` and `tumor.combined.txt` files joined by column, with additional columns for each filter containing TRUE/FALSE for whether or not that variant passed that filter. Each row is a single variant.  
