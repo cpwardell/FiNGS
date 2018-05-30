@@ -28,7 +28,6 @@
 ## Tumor-only (single BAM) mode
 ## Enable alignability filter
 ## Enable ontarget filter
-## Enable foxog filter
 
 #### END OF TO DO LIST #########################################
 
@@ -97,7 +96,7 @@ njobs=args.j
 sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
 #################################################################################################################
 try:
-	os.mkdir(resultsdir)
+	os.makedirs(resultsdir,exist_ok=True)
 except Exception as e:
 	print("CRITICAL ERROR: results directory could not be created: "+str(e))
 	print("If using Docker, the current directory must be writeable by any user")

@@ -3,6 +3,9 @@
 ## Load packages
 suppressMessages(library(VariantAnnotation))
 
+## Suppress all warnings
+options(warn=-1)
+
 ## Store time script was invoked for output names
 thetime=strftime(Sys.time(),"%Y%m%d%H%M%S")
 
@@ -30,6 +33,8 @@ params=read.table(parameters,header=F,row.names=1)
 # Read in mutect data for exome
 pdata=filterreader(pathtotumor,pathtonormal)
 
+
+
 ### Perform filtering
 
 ## Write plots to a single PDF
@@ -51,6 +56,7 @@ pdata=filterminvaftumor(pdata,params["minvaftumor",])
 pdata=filtermaxoaftumor(pdata,params["maxoaftumor",])
 pdata=filtermaxaltsecondtumor(pdata,params["maxsecondtumor",])
 pdata=filtermaxrefbadorientnormal(pdata,params["maxbadorient",])
+pdata=filterfoxog(pdata,params["foxog",])
 
 ## Turn off graphics device
 graphics.off()
@@ -110,11 +116,9 @@ filterheader=data.frame(Description=c(
   paste("Minimum VAF in tumor:",params["minvaftumor",]),
   paste("Maximum OAF in tumor:",params["maxoaftumor",]),
   paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
-  paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",])))
+  paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",]),
+  paste("FoxoG artefact binomial probability:",params["foxog",])))
 rownames(filterheader)=filtercols
-  
-  
-
 
 #2 Assign these to the relevant slot of the VCF
 fixed(header(invcf))$FILTER=filterheader

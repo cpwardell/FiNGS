@@ -18,8 +18,22 @@ filterreader=function(pathtotumor,pathtonormal){
   tumor=read.table(pathtotumor,header=F,stringsAsFactors=F)  
   normal=read.table(pathtonormal,header=F,stringsAsFactors=F)
   colnames(tumor)=paste0(cnames[1:ncol(tumor)],".tumor")
-  colnames(normal)=paste0(cnames[1:ncol(normal)],".normal")
+  colnames(normal)=paste0(cnames[1:ncol(normal)],".normal")  
   all=cbind(tumor,normal)
+  ## Add in mutation type
+  all$sixtypes=NA
+  all[all$REF.tumor=="T"&all$ALT.tumor=="G","sixtypes"]="T>G/A>C"
+  all[all$REF.tumor=="A"&all$ALT.tumor=="C","sixtypes"]="T>G/A>C"
+  all[all$REF.tumor=="T"&all$ALT.tumor=="C","sixtypes"]="T>C/A>G"
+  all[all$REF.tumor=="A"&all$ALT.tumor=="G","sixtypes"]="T>C/A>G"
+  all[all$REF.tumor=="T"&all$ALT.tumor=="A","sixtypes"]="T>A/A>T"
+  all[all$REF.tumor=="A"&all$ALT.tumor=="T","sixtypes"]="T>A/A>T"
+  all[all$REF.tumor=="C"&all$ALT.tumor=="T","sixtypes"]="C>T/G>A"
+  all[all$REF.tumor=="G"&all$ALT.tumor=="A","sixtypes"]="C>T/G>A"
+  all[all$REF.tumor=="C"&all$ALT.tumor=="G","sixtypes"]="C>G/G>C"
+  all[all$REF.tumor=="G"&all$ALT.tumor=="C","sixtypes"]="C>G/G>C"
+  all[all$REF.tumor=="C"&all$ALT.tumor=="A","sixtypes"]="C>A/G>T"
+  all[all$REF.tumor=="G"&all$ALT.tumor=="T","sixtypes"]="C>A/G>T"
   return(all)
 }
 
@@ -437,53 +451,59 @@ filtermaxrefcontignormal=function(exome,maxcontig){
 
 
 #################### FoxoG in tumor ############
-#Apply FoxoG filter if and only if FoxoG is detected
-filterfoxogtumor=function(exome,tpsvcfuids){
+#Classify C>A|G>T variants as either artifact or non-artifact
+#This is achieved by testing against 2 binomial distributions and selecting
+#the lower pvalue. One is centered on 0.5, the other at 0.9 (artifact).
+#The tested value is the proportion of reads in a specific orientation
+filterfoxog=function(exome,foxog){
   ## Default is all values pass
-  exome$filter.foxog.tumor=TRUE
+  exome$filter.foxog=TRUE
   
-  ## Split FoxoG data into two halves; only proceed if significatly different
-  a=(exome$FoxoG.tumor[exome$FoxoG.tumor<0.5])
-  b=1-(exome$FoxoG.tumor[exome$FoxoG.tumor>0.5])
-  pval=wilcox.test(a,b)$p.value
-  
-  print(pval)
-  
-  #filterfoxogtumor(exome,tpsexomevcfuids)
-  #filterfoxogtumor(panel,tpspanelvcfuids)
-  #filterfoxogtumor(giab,tpsgiabvcfuids)
-  #hist(exome$FoxoG.tumor,breaks=50)
-  #hist(panel$FoxoG.tumor,breaks=50)
-  #hist(giab$FoxoG.tumor,breaks=50)
-  #plot(density(exome$FoxoG.tumor,na.rm=T))
-  #plot(density(panel$FoxoG.tumor,na.rm=T))
-  #plot(density(giab$FoxoG.tumor,na.rm=T))
-  
-  #if(pval<0.05){
-  #  exome$filter.foxog.tumor=(exome$oaf.tumor<vaf)
-    
-    ## Pick up NA values.  These mean zero depth, so fail them
-  #  exome$filter.maxoaf.tumor[is.na(exome$filter.maxoaf.tumor)]=FALSE
-    
-    ## Plots for this filter
-  #  xlims=range(pretty(exome$oaf.tumor,nclass.Sturges(exome$oaf.tumor)))
-  #  hist(exome$oaf.tumor,breaks=100,main="Maximum VAF (normal)",xlim=xlims)
-  #  par(new=T)
-  #  plot(density(exome$oaf.tumor[exome$UID.normal%in%tpsvcfuids],na.rm=T),col="green",lwd=2,
-   #      main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims)
-  #  lines(density(exome$oaf.tumor[!(exome$UID.normal%in%tpsexomevcfuids)],na.rm=T),col="red",lwd=2)
-  #  abline(v=vaf,lwd=2,col="black",lty=2)
-  #  #rug(exome$oaf.tumor[exome$UID.normal%in%tpsvcfuids],col="green",ticksize=0.03) # #rug for pass
-  #  #rug(exome$oaf.tumor[!(exome$UID.normal%in%tpsvcfuids)],col="red",ticksize=-0.03) # #rug for fail
-    
-  #  x=table(exome$filter.maxoaf.tumor,exome$UID.tumor%in%tpsvcfuids)
-  #  print("Maximum OAF (tumor)")
-  #  senspec(x[2,2],x[2,1],x[1,1],x[1,2])
-    
-  #  return(exome)
-  #}
-}
+  ## List of mutation types (sorted) 
+  sixtypes=sort(unique(exome$sixtypes))
 
-## FoxoG meddling - do this test
+  ## Pvalues for a mutation belonging to 2 binomial distributions
+  exome$phalf=NA
+  exome$poxog=NA
+  
+  ## Separate calcuations for C>A and G>T
+  ctype=which(exome$REF.tumor%in%c("C") & exome$sixtypes%in%sixtypes[1])
+  for(i in 1:length(ctype)){
+    try((exome$phalf[ctype[i]]=binom.test(exome$F2R1.tumor[ctype[i]],exome$F2R1.tumor[ctype[i]]+exome$F1R2.tumor[ctype[i]],p=foxog)$p.value),silent=TRUE)
+    try((exome$poxog[ctype[i]]=binom.test(exome$F2R1.tumor[ctype[i]],exome$F2R1.tumor[ctype[i]]+exome$F1R2.tumor[ctype[i]],p=0.5)$p.value),silent=TRUE)
+  }
+  
+  gtype=which(exome$REF.tumor%in%c("G") & exome$sixtypes%in%sixtypes[1])
+  for(i in 1:length(gtype)){
+    try((exome$phalf[gtype[i]]=binom.test(exome$F1R2.tumor[gtype[i]],exome$F1R2.tumor[gtype[i]]+exome$F2R1.tumor[gtype[i]],p=foxog)$p.value),silent=TRUE)
+    try((exome$poxog[gtype[i]]=binom.test(exome$F1R2.tumor[gtype[i]],exome$F1R2.tumor[gtype[i]]+exome$F2R1.tumor[gtype[i]],p=0.5)$p.value),silent=TRUE)
+  }
+  
+  ## Fail any row where the variant is more likely to belong to the OxoG binomial
+  exome$filter.foxog[exome$poxog<exome$phalf]=FALSE
+  
+  ## Some plots
+  ## pre-filtering profile
+  try(plot(density(exome$FoxoG.tumor[exome$sixtypes%in%"C>A/G>T"],na.rm=T),
+       main="FoxoG density pre-filtering",xlab="Artifact orientation proportion",lwd=2,xlim=c(0,1)),silent=TRUE)
+  for(i in 2:length(sixtypes)){
+    try(lines(density(exome$FoxoG.tumor[exome$sixtypes%in%sixtypes[i]],na.rm=T),col=rainbow(6)[i]),silent=TRUE)
+  }
+  legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15)
+  
+  ## post filtering profile
+  try(plot(density(exome$FoxoG.tumor[exome$sixtypes%in%"C>A/G>T" & exome$filter.foxog],na.rm=T),
+       main="FoxoG density post-filtering",xlab="Artifact orientation proportion",lwd=2,xlim=c(0,1)),silent=TRUE)
+  for(i in 2:length(sixtypes)){
+    try(lines(density(exome$FoxoG.tumor[exome$sixtypes%in%sixtypes[i] & exome$filter.foxog],na.rm=T),col=rainbow(6)[i]),silent=TRUE)
+  }
+  legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15)
+  
+  ## barplot
+  try(barplot(table(exome$sixtypes),ylab="SNVs",main="Mutation type counts pre-FoxoG-filtering",col=c("black",rainbow(6)[2:6]),las=3),silent=TRUE)
+  try(barplot(table(exome$sixtypes[exome$filter.foxog]),ylab="SNVs",main="Mutation type counts post-FoxoG-filtering",col=c("black",rainbow(6)[2:6]),las=3),silent=TRUE)
+  
+  return(exome)
+}
 
 

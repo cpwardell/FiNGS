@@ -14,3 +14,4 @@ minvaftumor	0.05
 maxoaftumor	0.04
 maxsecondtumor	0.05
 maxbadorient	0.2
+foxog	0.9
