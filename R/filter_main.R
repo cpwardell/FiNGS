@@ -117,7 +117,7 @@ filterheader=data.frame(Description=c(
   paste("Maximum OAF in tumor:",params["maxoaftumor",]),
   paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
   paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",]),
-  paste("FoxoG artefact binomial probability:",params["foxog",])))
+  paste("FoxoG artefact proportion:",params["foxog",])))
 rownames(filterheader)=filtercols
 
 #2 Assign these to the relevant slot of the VCF

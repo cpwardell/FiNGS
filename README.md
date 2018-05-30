@@ -101,7 +101,7 @@ In the simplest case, provide FiNGS with paths to a VCF and the BAM files used t
 python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf
 ```
 
-FiNGS will create a directory called "results" containing the following files, where "date" is the time of execution expressed as a string e.g. "20180420155129" 2018/04/20 15:51:59 local time.
+FiNGS will create a directory called "results" containing the following files, where "date" is the time of execution expressed as a string e.g. "20180420155129" is 2018/04/20 15:51:59 local time.
 
 + `filtered.results.date.vcf`  
 A VCF containing the filtering results. Descriptions of the filters used and their threshold values are stored in the header, and PASS/fail status stored in the FILTER column of each record
@@ -139,7 +139,7 @@ Run FiNGS with no additional arguments to get the help file.  If there's somethi
 A paper is being prepared for submission shortly and will be referenced here when available.
 
 ## Description of filters
-FiNGS assesses variants using 22 filters.  Below are descriptions of each filter and the default values used.
+FiNGS assesses variants using 23 filters.  Below are descriptions of each filter and the default values used.
  
 1. **Minimum depth in tumor**.  Default value is 10x.  
 This filter excludes variants that do not have adequate sequencing depth in the tumor sample.
@@ -209,6 +209,11 @@ Excludes variants with a high proportion of secondary alignments.  Secondary ali
 22. **Maximum proportion of inversion orientation reads in normal**.  Default value is 0.2.  
 Excludes variants with a high proportion of reads in the normal sample that have inverted orientation.  This suggests a region of poor mappability.
 
+23. **FoxoG artifact proportion**.  Default value is 0.9.  
+C>A|G>T variants can be oxidation artifacts introduced during library preparation [(Costello et al, 2013)](http://doi.org/10.1093/nar/gks1443).
+These "OxoG" artifacts have a telltale read orientation, with the majority of ALT reads in the artifact orientation.
+All C>A|G>T variants are classified as being part of two binomial distributions, one centered at 0.5 (50% artifact orientation, 50% non-artifact orientation) and the other at 0.9 (90% artifact orientation reads).
+C>A|G>T variants classified as OxoG are removed. This filter could be switched off if desired by setting a value of 2 or greater (only 0 to 1 values are possible, ensuring all variants would PASS the filter).
 
 ## Dictionary of values reported in the metrics files
 The `filtered.results.date.txt` output file is the `normal.combined.txt` and `tumor.combined.txt` files joined by column, with additional columns for each filter containing TRUE/FALSE for whether or not that variant passed that filter. Each row is a single variant.  
@@ -258,7 +263,7 @@ Column | Description | Example
 **sb** | Strand bias, see definition above | 0.207
 **gsb** | GATK strand bias, see definition above | 0.264
 **fishp** | P value for Fisher's exact test for strand bias | 1
-**FoxoG** | Oxoguanine artifact score, only calculated for C>A or G>T mutations, defined in [Costello et al, 2013](https://academic.oup.com/nar/article/41/6/e67/2902364) | NA
+**FoxoG** | Oxoguanine artifact orientation proportion, only relevant for for C>A or G>T mutations, defined in [Costello et al, 2013](https://academic.oup.com/nar/article/41/6/e67/2902364) | NA
 **refld** | Edit distance for REF reads | 0
 **altld** | Edit distance for ALT reads | 2
 **refsecondprop** | Proportion of REF reads that have secondary alignments | 0
@@ -267,6 +272,9 @@ Column | Description | Example
 **altbadorientationprop** | Proportion of ALT reads with an inverted orientation | 0
 **refmatecontigcount** | Number of contigs seen in REF reads | 1
 **altmatecontigcount** | Number of contigs seen in ALT reads | 1
+**phalf** | P value for this variant belonging to the non-OxoG-artifact distribution, only calculated for for C>A or G>T mutations | NA
+**poxog** | P value for this variant belonging to the OxoG-artifact distribution, only calculated for for C>A or G>T mutations | NA
+
 
 
 
