@@ -57,7 +57,7 @@ parser = MyParser(description="FiNGS: Filters for Next Generation Sequencing",fo
 parser.add_argument("-v", type=str, help="absolute path to VCF file",required=True)
 parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
 parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
-#parser.add_argument("-a", type=str, help="absolute path to alignability track",required=False)
+parser.add_argument("-a", type=str, help="absolute path to alignability BED file",required=False,default="None")
 parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
 parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
 parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
@@ -82,7 +82,7 @@ printargs=printargs.replace("]","")
 vcfpath=args.v
 tbampath=args.t
 nbampath=args.n
-#alignabilitytrack=args.a
+alignabilitytrack=args.a
 bedfile=args.b
 resultsdir=args.d
 parameters=args.p
@@ -127,7 +127,7 @@ logging.info("Tumor BAM is: "+str(tbampath))
 logging.info("Normal BAM is: "+str(nbampath))
 logging.info("Output directory is: "+str(resultsdir))
 logging.info("Filtering parameter file is: "+str(parameters))
-#logging.info("Alignability file is: "+str(alignabilitytrack))
+logging.info("Alignability file is: "+str(alignabilitytrack))
 logging.info("Bedfile is: "+str(bedfile))
 logging.info("Number of records per chunk is: "+str(chunksize))
 logging.info("Maximum read depth is: "+str(maxdepth))
@@ -213,7 +213,7 @@ else:
 codedirectory = os.path.dirname(os.path.realpath(__file__))
 
 logging.info("Launching R script to perform filtering")
-subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile), shell=True)
+subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile)+" "+str(alignabilitytrack), shell=True)
 logging.info("R script complete")
 
 exit()

@@ -126,6 +126,7 @@ All intermediate chunks of the tumor BAM file analysis are combined into this fi
 + **-c** Optional; chunk size, the number of records to process per chunk. Default is 100
 + **-m** Optional; maximum read depth. Reads beyond this depth will be ignored and a warning emitted to the log file. Default is 1000 
 + **-b** Optional; target bed file. Variants not within this bed file will be filtered (the 0-based coordinate system of bed files is accounted for). Default is None
++ **-a** Optional; alignability bed file. Variants not within this bed file will be filtered (the 0-based coordinate system of bed files is accounted for). Default is None
 + **-j** Optional; number of processors to use. -1 uses all available. Default is -1 
 + **--logging** Optional; change logging level. Default is INFO, can be DEBUG for more detail or NOTSET for silent
 + **--donotcleanup** Optional; do not delete intermediate files  
@@ -140,7 +141,7 @@ Run FiNGS with no additional arguments to get the help file.  If there's somethi
 A paper is being prepared for submission shortly and will be referenced here when available.
 
 ## Description of filters
-FiNGS assesses variants using 24 filters.  Below are descriptions of each filter and the default values used.
+FiNGS assesses variants using 25 filters.  Below are descriptions of each filter and the default values used.
  
 1. **Minimum depth in tumor**.  Default value is 10x.  
 This filter excludes variants that do not have adequate sequencing depth in the tumor sample.
@@ -217,7 +218,13 @@ All C>A|G>T variants are classified as being part of two binomial distributions,
 C>A|G>T variants classified as OxoG are removed. This filter could be switched off if desired by setting a value of 2 or greater (only 0 to 1 values are possible, ensuring all variants would PASS the filter).
 
 24. **Ontarget filter**.  Default bed file in None (i.e. all variants PASS).  
-Excludes variants that are not contained within the regions specified in a bed file.
+Excludes variants that are not contained within the regions specified in a bed file. This bed file should describe regions of intereset; e.g. the capture regions of an exome or a targeted sequencing panel.
+
+25. **Alignability filter**.  Default bed file in None (i.e. all variants PASS).  
+Excludes variants that are not contained within the regions specified in a bed file. This bed file should describe regions of the genome that are uniquely alignable.
+FiNGS is provided with an example in the R subdirectory (FiNGS/R/wgEncodeCrgMapabilityAlign100mer.uniqueonly.bed) which was produced using the GEM mappability files for 100mer reads in GRCh37/hg19.
+Note that these files are specific for both read length and genome. 100mer reads are relatively short by 2018 standards and GRCh38/hg38 is the most recent human genome, so new alignability tracks should ideally be generated.
+
 
 ## Dictionary of values reported in the metrics files
 The `filtered.results.date.txt` output file is the `normal.combined.txt` and `tumor.combined.txt` files joined by column, with additional columns for each filter containing TRUE/FALSE for whether or not that variant passed that filter. Each row is a single variant.  

@@ -17,6 +17,7 @@ pathtovcf=args[6]
 pass=args[7]
 passonly=args[8]
 bedfile=args[9]
+alignfile=args[10]
 
 if(parameters=="default"){
   parameters=paste0(codedir,"/R/filter_parameters.txt")
@@ -54,6 +55,7 @@ pdata=filtermaxoaftumor(pdata,params["maxoaftumor",])
 pdata=filtermaxaltsecondtumor(pdata,params["maxsecondtumor",])
 pdata=filtermaxrefbadorientnormal(pdata,params["maxbadorient",])
 pdata=filterontarget(pdata,bedfile)
+pdata=filteralign(pdata,alignfile)
 pdata=filterfoxog(pdata,params["foxog",])
 
 ## Turn off graphics device
@@ -116,6 +118,7 @@ filterheader=data.frame(Description=c(
   paste("Maximum proportion of secondary alignments in tumor:",params["maxsecondtumor",]),
   paste("Maximum proportion of inversion orientation reads in normal:",params["maxbadorient",]),
   paste("Bedfile used:",bedfile),
+  paste("Alignability file used:",alignfile),
   paste("FoxoG artefact proportion:",params["foxog",])))
 
 rownames(filterheader)=filtercols

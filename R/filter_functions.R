@@ -512,7 +512,8 @@ filterontarget=function(exome,bedfile){
   exome$filter.ontarget=TRUE
   
   ## If no bedfile is provided, just return
-  if(is.na(bedfile)){return(exome)}
+  #if(is.na(bedfile)){return(exome)}
+  if(bedfile=="None"){return(exome)}
  
   ## Read in bedfile
   bed=read.table(bedfile,header=F,stringsAsFactors=F)
@@ -524,8 +525,33 @@ filterontarget=function(exome,bedfile){
   ## Cast variant coordinates to genomic ranges object
   grexome = GRanges(seqnames=Rle(exome$CHR.tumor),ranges=IRanges(exome$POS.tumor,end=exome$POS.tumor))
 
-  ## Execute the filter
-  exome$filter.ontarget=grexome%within%grbed
+  ## Execute the filter - we suppress warnings abouts missing contigs in one or the other
+  exome$filter.ontarget=suppressWarnings(grexome%within%grbed)
+  
+  return(exome)
+}
+
+## Filters out any variants that are not uniquely alignable
+filteralign=function(exome,bedfile){
+  ## Default is all values pass
+  exome$filter.alignability=TRUE
+  
+  ## If no bedfile is provided, just return
+  #if(is.na(bedfile)){return(exome)}
+  if(bedfile=="None"){return(exome)}
+  
+  ## Read in bedfile
+  bed=read.table(bedfile,header=F,stringsAsFactors=F)
+  
+  ## Cast bedfile to genomic ranges object
+  ## We add 1 to the positions because bed files have 0-based coordinates, VCFs are 1-based
+  grbed=GRanges(seqnames=Rle(bed[,1]),ranges=IRanges(bed[,2]+1,end=bed[,3]+1))
+  
+  ## Cast variant coordinates to genomic ranges object
+  grexome = GRanges(seqnames=Rle(exome$CHR.tumor),ranges=IRanges(exome$POS.tumor,end=exome$POS.tumor))
+  
+  ## Execute the filter - we suppress warnings abouts missing contigs in one or the other
+  exome$filter.alignability=suppressWarnings(grexome%within%grbed)
   
   return(exome)
 }
