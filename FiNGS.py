@@ -57,7 +57,7 @@ parser = MyParser(description="FiNGS: Filters for Next Generation Sequencing",fo
 parser.add_argument("-v", type=str, help="absolute path to VCF file",required=True)
 parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
 parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
-parser.add_argument("-a", type=str, help="absolute path to alignability BED file",required=False,default="None")
+parser.add_argument("-a", type=str, help="name of alignability file to use (default is None, can be hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128)",required=False,default="None")
 parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
 parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
 parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
@@ -137,6 +137,11 @@ logging.info("Keep intermediate files?: "+str(args.donotcleanup))
 logging.info("Overwrite existing output?: "+str(args.overwrite))
 logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
 logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
+
+## Check that the alignability file is one of the specified possibilities, else exit
+if not alignabilitytrack in ["None","hg19.75","hg19.100","hg19.128","hg38.75","hg38.100","hg38.128"]:
+	logging.info("ERROR: The alignability track is not one of hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128")
+	sys.exit()
 
 ## Define filename prefixes for output..
 tfilename = "tumor"

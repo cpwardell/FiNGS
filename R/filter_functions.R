@@ -536,13 +536,22 @@ filteralign=function(exome,bedfile){
   ## Default is all values pass
   exome$filter.alignability=TRUE
   
+  ## Use a switch to set bedfile value
+  bedfile=switch(bedfile,
+                 None="None",
+                 hg19.75="unique.mappability.75.hg19.bed.gz",
+                 hg19.100="unique.mappability.100.hg19.bed.gz",
+                 hg19.128="unique.mappability.128.hg19.bed.gz",
+                 hg38.75="unique.mappability.75.hg38.bed.gz",
+                 hg38.100="unique.mappability.100.hg38.bed.gz",
+                 hg38.128="unique.mappability.128.hg38.bed.gz")
+  
   ## If no bedfile is provided, just return
-  #if(is.na(bedfile)){return(exome)}
   if(bedfile=="None"){return(exome)}
   
   ## Read in bedfile
-  bed=read.table(bedfile,header=F,stringsAsFactors=F)
-  
+  bed=read.table(paste0(codedir,"/R/",bedfile),header=F,stringsAsFactors=F)
+
   ## Cast bedfile to genomic ranges object
   ## We add 1 to the positions because bed files have 0-based coordinates, VCFs are 1-based
   grbed=GRanges(seqnames=Rle(bed[,1]),ranges=IRanges(bed[,2]+1,end=bed[,3]+1))
