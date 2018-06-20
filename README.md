@@ -48,9 +48,10 @@ cd /FiNGS/exampledata
 python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 ```
 
-When you run it on your own data, you can mount the location of your files like so. This would output a results directory in the directory the command was executed in
+When you run it on your own data, you can mount the location of your files as below. This would output a results directory in the directory the command was executed in. Note that the `-u` argument ensures that files created by the 
+docker container will be owned by the user invoking the docker.
 ```
-docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local fings /bin/bash -c "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
+docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local -u $UID:$UID fings /bin/bash -c "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
 ```
 
 ## Suggested usage
