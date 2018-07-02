@@ -416,7 +416,7 @@ filtermaxrefbadorientnormal=function(exome,maxbadorient){
   
   ## Plots for this filter
   xlims=range(pretty(exome$refbadorientationprop.normal,nclass.Sturges(exome$refbadorientationprop.normal)))
-  hist(exome$refbadorientationprop.normal,breaks=100,main="Maximum bad orientation REF reads (normal)",xlim=xlims,xlab="Proporotion of bad orientation reads")
+  hist(exome$refbadorientationprop.normal,breaks=100,main="Maximum bad orientation REF reads (normal)",xlim=xlims,xlab="Proportion of bad orientation reads")
   par(new=T)
   try(plot(density(exome$altsecondprop.tumor,na.rm=T),col="black",lwd=2,
        main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)

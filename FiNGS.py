@@ -64,7 +64,6 @@ parser.add_argument("-c", type=int, help="number of records to process per chunk
 parser.add_argument("-m", type=int, help="maximum read depth to process",required=False,default=1000)
 parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)",required=False,default=-1)
 parser.add_argument("--logging", help="Set logging level (default is INFO, can be DEBUG for more detail or NOTSET for silent)",required=False,default="INFO")
-parser.add_argument("--donotcleanup", help="Keep intermediate files (not recommended, will keep intermediate chunks)",required=False,default=False,action='store_true')
 parser.add_argument("--overwrite", help="Overwrite previous results if they exist?",required=False,default=False,action='store_true')
 parser.add_argument("--PASSonlyin", help="Only use variants with that the original caller PASSed?",required=False,default=False,action='store_true')
 parser.add_argument("--PASSonlyout", help="Only write PASS variants to the output VCF",required=False,default=False,action='store_true')
@@ -132,7 +131,6 @@ logging.info("Number of records per chunk is: "+str(chunksize))
 logging.info("Maximum read depth is: "+str(maxdepth))
 logging.info("Processor threads used is: "+str(njobs))
 logging.info("Logging level is: "+str(args.logging))
-logging.info("Keep intermediate files?: "+str(args.donotcleanup))
 logging.info("Overwrite existing output?: "+str(args.overwrite))
 logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
 logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
@@ -163,50 +161,30 @@ if(args.overwrite or (not os.path.exists(ndata) and not os.path.exists(tdata))):
 
 	## Tumor bam
 	vcf_reader = vcf.Reader(open(vcfpath, 'r'))
-	Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,tbampath, resultsdir+"/"+tfilename+"."+str(chunknumber+1)+".txt",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
+	tumvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,tbampath,"tumor",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
 
 	## Normal bam
 	vcf_reader = vcf.Reader(open(vcfpath, 'r'))
-	Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,nbampath, resultsdir+"/"+nfilename+"."+str(chunknumber+1)+".txt",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
+	normvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,nbampath,"normal",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
 	## End of multithreaded code:
 
-	## Combine all chunks into a single file per sample
-	## check that they're the same number of lines as the input
-	logging.debug("Concatenating tumor data")
-	with open(tdata, 'w') as outfile:
-		tdatacount=0
-		for i in range(maxchunks):
-			for line in open(resultsdir+"/"+tfilename+"."+str(i+1)+".txt"):
-				tdatacount+=1
-				outfile.write(line)
+	## Output all chunks into a single file per sample
+	logging.debug("Outputting tumor data")
+	tout=open(tdata, 'w')
+	for LINE in tumvars:
+		print(*LINE,sep="\n",file=tout)
+	tout.close()
 
-	logging.debug("Concatenating normal data")
-	with open(ndata, 'w') as outfile:
-		ndatacount=0
-		for i in range(maxchunks):
-			for line in open(resultsdir+"/"+nfilename+"."+str(i+1)+".txt"):
-				ndatacount+=1
-				outfile.write(line)
-
-	## Delete intermediate chunks if donotcleanup is true
-	if(not args.donotcleanup):
-		logging.debug("Deleting intermediate chunks")
-		for i in range(maxchunks):
-			os.remove(resultsdir+"/"+nfilename+"."+str(i+1)+".txt")
-			os.remove(resultsdir+"/"+tfilename+"."+str(i+1)+".txt")
-
+	logging.debug("Outputting normal data")
+	nout=open(ndata, 'w')
+	for LINE in normvars:
+		print(*LINE,sep="\n",file=nout)
+	nout.close()
+	
 	## Compress all output
 	## Do not gzip the pre-R output; read.table sometimes crashes in R
 	#logging.debug("Compressing all output")
 	#subprocess.call("gzip *txt", shell=True) 
-
-	if(nvcflines==tdatacount==ndatacount):
-		logging.debug("VCF, tumor data and normal data all contain "+str(nvcflines)+" lines")
-	else:
-		logging.debug("Potentional mismatch between number of lines in VCF and/or tumor and/or normal data; is the --PASSonlyin option being used?")
-		logging.debug("VCF contains "+str(nvcflines)+" lines")
-		logging.debug("Tumor data contains "+str(tdatacount)+" lines")
-		logging.debug("Normal data contains "+str(ndatacount)+" lines")
 
 else:
 	logging.info("Previous results found; skipping ahead to filtering steps")

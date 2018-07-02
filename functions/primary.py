@@ -12,9 +12,10 @@ from functions.shared_functions import *
 
 def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
 
-  log=open(filename,"w")
+  logging.info("Started processing "+filename+" chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" containing "+str(len(myvcf))+" records")
 
-  logging.info("Started processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
+  ## Create a list to store the results from all variants in it...
+  allvariants=[]
 
   ## Open the bamfile.  We do it ONCE and ONCE ONLY for speed reasons
   #logging.debug("Opening bam file")
@@ -537,15 +538,17 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
       str(altmatecontigcount)
 
       #print(outputstring) # print to screen
-      print(outputstring,file=log) # print to log file
+      #print(outputstring,file=log) # print to log file
+
+      allvariants.append(outputstring)
       
   
   ## Close the bamfile
   samfile.close()
 
-  ## Close the logfile
-  log.close()
-
   ## Announce completion
-  logging.info("Finished processing chunk "+filename+" ("+str(chunknumber+1)+" of "+str(maxchunks)+") containing "+str(len(myvcf))+" records")
+  logging.info("Finished processing "+filename+" chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" containing "+str(len(myvcf))+" records")
+
+  ## Return the variants
+  return(allvariants)
 
