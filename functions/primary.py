@@ -210,6 +210,10 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                 #distancetoendref.append(abs(min(offset,offset-alignedread.infer_query_length()))) # hard read lengths
                 distancetoend1ref.append(de1) # soft-clipped read length
                 distancetoend2ref.append(de2) # soft-clipped read length
+                try:
+                  reflevdists.append(editdistance.eval(alignedread.get_reference_sequence(),alignedread.query_alignment_sequence))
+                except:
+                  reflevdists.append(1)
               ## We want reads that contain indels (i.e. the cigar string isn't readlengthM e.g. 74M)
               try:
                 if(alignedread.seq[offset:offset+len(str(variant.ALT[0]))] == str(variant.ALT[0]) and
@@ -221,6 +225,10 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                   #distancetoendalt.append(abs(min(offset,offset-alignedread.infer_query_length()))) # hard read lengths
                   distancetoend1alt.append(de1) # soft-clipped read length
                   distancetoend2alt.append(de2) # soft-clipped read length
+                  try:
+                    altlevdists.append(editdistance.eval(alignedread.get_reference_sequence(),alignedread.query_alignment_sequence))
+                  except:
+                    altlevdists.append(1)
               except:
                 pass
             ## Counters for deletions 
@@ -235,6 +243,10 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                   #distancetoendref.append(abs(min(offset,offset-alignedread.infer_query_length()))) # hard read lengths
                   distancetoend1ref.append(de1) # soft-clipped read length
                   distancetoend2ref.append(de2) # soft-clipped read length
+                  try:
+                    reflevdists.append(editdistance.eval(alignedread.get_reference_sequence(),alignedread.query_alignment_sequence))
+                  except:
+                    reflevdists.append(1)
               try:
                 if(alignedread.seq[offset] == str(variant.ALT[0]) and
                    alignedread.cigarstring!=str(alignedread.rlen)+"M"):
@@ -245,6 +257,10 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                   #distancetoendalt.append(abs(min(offset,offset-alignedread.infer_query_length()))) # hard read lengths
                   distancetoend1alt.append(de1) # soft-clipped read length
                   distancetoend2alt.append(de2) # soft-clipped read length
+                  try:
+                    altlevdists.append(editdistance.eval(alignedread.get_reference_sequence(),alignedread.query_alignment_sequence))
+                  except:
+                    altlevdists.append(1)
               except:
                 pass
 

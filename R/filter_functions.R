@@ -214,7 +214,7 @@ filterstrandbias=function(exome,maximumstrandbias){
   
   ## Plots for this filter
   xlims=range(pretty(exome$sb.tumor,nclass.Sturges(exome$sb.tumor)))
-  hist(exome$sb.tumor,breaks=100,main="Strand bias (top 10%) (tumor)",xlim=xlims,xlab="Strand bias")
+  try(hist(exome$sb.tumor,breaks=100,main="Strand bias (top 10%) (tumor)",xlim=xlims,xlab="Strand bias"),silent=TRUE)
   par(new=T)
   try(plot(density(exome$sb.tumor,na.rm=T),col="black",lwd=2,
        main="",ylab="",xlab="",xaxt="n",yaxt="n",frame.plot=F,xlim=xlims),silent=TRUE)
@@ -489,7 +489,7 @@ filterfoxog=function(exome,foxog){
   for(i in 2:length(sixtypes)){
     try(lines(density(exome$FoxoG.tumor[exome$sixtypes%in%sixtypes[i]],na.rm=T),col=rainbow(6)[i]),silent=TRUE)
   }
-  legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15)
+  try(legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15),silent=TRUE)
   
   ## post filtering profile
   try(plot(density(exome$FoxoG.tumor[exome$sixtypes%in%"C>A/G>T" & exome$filter.foxog],na.rm=T),
@@ -497,7 +497,7 @@ filterfoxog=function(exome,foxog){
   for(i in 2:length(sixtypes)){
     try(lines(density(exome$FoxoG.tumor[exome$sixtypes%in%sixtypes[i] & exome$filter.foxog],na.rm=T),col=rainbow(6)[i]),silent=TRUE)
   }
-  legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15)
+  try(legend("topleft",legend=sixtypes,col=c("black",rainbow(6)[2:6]),pch=15),silent=TRUE)
   
   ## barplot
   try(barplot(table(exome$sixtypes),ylab="SNVs",main="Mutation type counts pre-FoxoG-filtering",col=c("black",rainbow(6)[2:6]),las=3),silent=TRUE)

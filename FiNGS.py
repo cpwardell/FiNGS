@@ -26,8 +26,7 @@
 ## Do not gzip the pre-R output; read.table sometimes crashes in R
 
 ## Tumor-only (single BAM) mode
-## Enable alignability filter
-## Enable ontarget filter
+## Enhance simple indel support
 
 #### END OF TO DO LIST #########################################
 
