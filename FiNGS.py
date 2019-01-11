@@ -29,7 +29,6 @@
 ## Enhance simple indel support
 
 #### END OF TO DO LIST #########################################
-
 import os
 import sys
 import vcf
@@ -41,162 +40,168 @@ import math
 import gzip
 import subprocess
 
-from functions.shared_functions import *
-from functions.primary import *
+from functions.shared_functions import vcfcount, vcfyield
+from functions.primary import primary
 from joblib import Parallel, delayed
 
-## Gather command line args
-## Create a new argparse class that will print the help message by default
-class MyParser(argparse.ArgumentParser):
-    def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
-parser = MyParser(description="FiNGS: Filters for Next Generation Sequencing",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("-v", type=str, help="absolute path to VCF file",required=True)
-parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
-parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
-parser.add_argument("-a", type=str, help="name of alignability file to use (default is None, can be hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128)",required=False,default="None")
-parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
-parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
-parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
-parser.add_argument("-c", type=int, help="number of records to process per chunk",required=False,default=100)
-parser.add_argument("-m", type=int, help="maximum read depth to process",required=False,default=1000)
-parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)",required=False,default=-1)
-parser.add_argument("--logging", help="Set logging level (default is INFO, can be DEBUG for more detail or NOTSET for silent)",required=False,default="INFO")
-parser.add_argument("--overwrite", help="Overwrite previous results if they exist?",required=False,default=False,action='store_true')
-parser.add_argument("--PASSonlyin", help="Only use variants with that the original caller PASSed?",required=False,default=False,action='store_true')
-parser.add_argument("--PASSonlyout", help="Only write PASS variants to the output VCF",required=False,default=False,action='store_true')
-args = parser.parse_args()
+def main():
 
-## Turn arguments into a nice string for printing
-printargs=str(sys.argv)
-printargs=printargs.replace(",","")
-printargs=printargs.replace("'","")
-printargs=printargs.replace("[","")
-printargs=printargs.replace("]","")
+    ## Gather command line args
+    ## Create a new argparse class that will print the help message by default
+    class MyParser(argparse.ArgumentParser):
+        def error(self, message):
+            sys.stderr.write('error: %s\n' % message)
+            self.print_help()
+            sys.exit(2)
+    parser = MyParser(description="FiNGS: Filters for Next Generation Sequencing",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-v", type=str, help="absolute path to VCF file",required=True)
+    parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
+    parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
+    parser.add_argument("-a", type=str, help="name of alignability file to use (default is None, can be hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128)",required=False,default="None")
+    parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
+    parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
+    parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
+    parser.add_argument("-c", type=int, help="number of records to process per chunk",required=False,default=100)
+    parser.add_argument("-m", type=int, help="maximum read depth to process",required=False,default=1000)
+    parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)",required=False,default=-1)
+    parser.add_argument("--logging", help="Set logging level (default is INFO, can be DEBUG for more detail or NOTSET for silent)",required=False,default="INFO")
+    parser.add_argument("--overwrite", help="Overwrite previous results if they exist?",required=False,default=False,action='store_true')
+    parser.add_argument("--PASSonlyin", help="Only use variants with that the original caller PASSed?",required=False,default=False,action='store_true')
+    parser.add_argument("--PASSonlyout", help="Only write PASS variants to the output VCF",required=False,default=False,action='store_true')
+    args = parser.parse_args()
 
-## Assign command line args to more friendly variable names
-vcfpath=args.v
-tbampath=args.t
-nbampath=args.n
-alignabilitytrack=args.a
-bedfile=args.b
-resultsdir=args.d
-parameters=args.p
-chunksize=args.c
-maxdepth=args.m
-njobs=args.j
+    ## Turn arguments into a nice string for printing
+    printargs=str(sys.argv)
+    printargs=printargs.replace(",","")
+    printargs=printargs.replace("'","")
+    printargs=printargs.replace("[","")
+    printargs=printargs.replace("]","")
 
-## Create directory to put results in
-## Trycatch prevents exception if location is unwritable 
-#################################################################################################################
-sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
-#################################################################################################################
-try:
-	os.makedirs(resultsdir,exist_ok=True)
-except Exception as e:
-	print("CRITICAL ERROR: results directory could not be created: "+str(e))
-	print("If using Docker, the current directory must be writeable by any user")
-	sys.exit()
+    ## Assign command line args to more friendly variable names
+    vcfpath=args.v
+    tbampath=args.t
+    nbampath=args.n
+    alignabilitytrack=args.a
+    bedfile=args.b
+    resultsdir=args.d
+    parameters=args.p
+    chunksize=args.c
+    maxdepth=args.m
+    njobs=args.j
 
-## Set logging to desired level
-if(args.logging=="INFO"):
-  logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S',filename=resultsdir+'/log.txt',filemode='w')
-  console = logging.StreamHandler()
-  console.setLevel(logging.INFO)
-  formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
-  console.setFormatter(formatter)
-  logging.getLogger('').addHandler(console)
+    ## Create directory to put results in
+    ## Trycatch prevents exception if location is unwritable 
+    #################################################################################################################
+    sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
+    #################################################################################################################
+    try:
+        os.makedirs(resultsdir,exist_ok=True)
+    except Exception as e:
+        print("CRITICAL ERROR: results directory could not be created: "+str(e))
+        print("If using Docker, the current directory must be writeable by any user")
+        sys.exit()
 
-if(args.logging=="DEBUG"):
-  logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S',filename=resultsdir+'/log.txt',filemode='w')
-  console = logging.StreamHandler()
-  console.setLevel(logging.DEBUG)
-  formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
-  console.setFormatter(formatter)
-  logging.getLogger('').addHandler(console)
-  logging.debug("Debugging mode enabled")
+    ## Set logging to desired level
+    if(args.logging=="INFO"):
+        logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S',filename=resultsdir+'/log.txt',filemode='w')
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+        console.setFormatter(formatter)
+        logging.getLogger('').addHandler(console)
 
-## Write the command line parameters to the log file
-logging.info("FiNGS was invoked using this command: "+printargs)
-logging.info("VCF is: "+str(vcfpath))
-logging.info("Tumor BAM is: "+str(tbampath))
-logging.info("Normal BAM is: "+str(nbampath))
-logging.info("Output directory is: "+str(resultsdir))
-logging.info("Filtering parameter file is: "+str(parameters))
-logging.info("Alignability file is: "+str(alignabilitytrack))
-logging.info("Bedfile is: "+str(bedfile))
-logging.info("Number of records per chunk is: "+str(chunksize))
-logging.info("Maximum read depth is: "+str(maxdepth))
-logging.info("Processor threads used is: "+str(njobs))
-logging.info("Logging level is: "+str(args.logging))
-logging.info("Overwrite existing output?: "+str(args.overwrite))
-logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
-logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
+    if(args.logging=="DEBUG"):
+        logging.basicConfig(level=logging.INFO,format='%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S',filename=resultsdir+'/log.txt',filemode='w')
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s',datefmt='%Y-%m-%d %H:%M:%S')
+        console.setFormatter(formatter)
+        logging.getLogger('').addHandler(console)
+        logging.debug("Debugging mode enabled")
 
-## Check that the alignability file is one of the specified possibilities, else exit
-if not alignabilitytrack in ["None","hg19.75","hg19.100","hg19.128","hg38.75","hg38.100","hg38.128"]:
-	logging.info("ERROR: The alignability track is not one of hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128")
-	sys.exit()
+    ## Write the command line parameters to the log file
+    logging.info("FiNGS was invoked using this command: "+printargs)
+    logging.info("VCF is: "+str(vcfpath))
+    logging.info("Tumor BAM is: "+str(tbampath))
+    logging.info("Normal BAM is: "+str(nbampath))
+    logging.info("Output directory is: "+str(resultsdir))
+    logging.info("Filtering parameter file is: "+str(parameters))
+    logging.info("Alignability file is: "+str(alignabilitytrack))
+    logging.info("Bedfile is: "+str(bedfile))
+    logging.info("Number of records per chunk is: "+str(chunksize))
+    logging.info("Maximum read depth is: "+str(maxdepth))
+    logging.info("Processor threads used is: "+str(njobs))
+    logging.info("Logging level is: "+str(args.logging))
+    logging.info("Overwrite existing output?: "+str(args.overwrite))
+    logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
+    logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
 
-## Define filename prefixes for output..
-tfilename = "tumor"
-nfilename = "normal"
+    ## Check that the alignability file is one of the specified possibilities, else exit
+    if not alignabilitytrack in ["None","hg19.75","hg19.100","hg19.128","hg38.75","hg38.100","hg38.128"]:
+        logging.info("ERROR: The alignability track is not one of hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128")
+        sys.exit()
 
-## Check for existing data; if they exist, skip straight to the R filtering phase
-tdata=resultsdir+"/"+tfilename+".combined.txt"
-ndata=resultsdir+"/"+nfilename+".combined.txt"
+    ## Define filename prefixes for output..
+    tfilename = "tumor"
+    nfilename = "normal"
 
-if(args.overwrite or (not os.path.exists(ndata) and not os.path.exists(tdata))):
+    ## Check for existing data; if they exist, skip straight to the R filtering phase
+    tdata=resultsdir+"/"+tfilename+".combined.txt"
+    ndata=resultsdir+"/"+nfilename+".combined.txt"
 
-	## Find size of VCF; vital for chunking and estimating runtime
-	logging.info("VCF line counting begun")
-	nvcflines=vcfcount(vcfpath)
-	maxchunks=math.ceil(nvcflines/chunksize)
-	logging.info("VCF contains "+str(nvcflines)+" records")
+    if(args.overwrite or (not os.path.exists(ndata) and not os.path.exists(tdata))):
 
-	## Multithreaded code:
-	## VCF must be opened once per bamfile
+        ## Find size of VCF; vital for chunking and estimating runtime
+        logging.info("VCF line counting begun")
+        nvcflines=vcfcount(vcfpath)
+        maxchunks=math.ceil(nvcflines/chunksize)
+        logging.info("VCF contains "+str(nvcflines)+" records")
 
-	## Tumor bam
-	vcf_reader = vcf.Reader(open(vcfpath, 'r'))
-	tumvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,tbampath,"tumor",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
+        ## Multithreaded code:
+        ## VCF must be opened once per bamfile
 
-	## Normal bam
-	vcf_reader = vcf.Reader(open(vcfpath, 'r'))
-	normvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,nbampath,"normal",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
-	## End of multithreaded code:
+        ## Tumor bam
+        vcf_reader = vcf.Reader(open(vcfpath, 'r'))
+        tumvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,tbampath,"tumor",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
 
-	## Output all chunks into a single file per sample
-	logging.debug("Outputting tumor data")
-	tout=open(tdata, 'w')
-	for LINE in tumvars:
-		print(*LINE,sep="\n",file=tout)
-	tout.close()
+        ## Normal bam
+        vcf_reader = vcf.Reader(open(vcfpath, 'r'))
+        normvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,nbampath,"normal",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
+        ## End of multithreaded code:
 
-	logging.debug("Outputting normal data")
-	nout=open(ndata, 'w')
-	for LINE in normvars:
-		print(*LINE,sep="\n",file=nout)
-	nout.close()
-	
-	## Compress all output
-	## Do not gzip the pre-R output; read.table sometimes crashes in R
-	#logging.debug("Compressing all output")
-	#subprocess.call("gzip *txt", shell=True) 
+        ## Output all chunks into a single file per sample
+        logging.debug("Outputting tumor data")
+        tout=open(tdata, 'w')
+        for LINE in tumvars:
+            print(*LINE,sep="\n",file=tout)
+        tout.close()
 
-else:
-	logging.info("Previous results found; skipping ahead to filtering steps")
+        logging.debug("Outputting normal data")
+        nout=open(ndata, 'w')
+        for LINE in normvars:
+            print(*LINE,sep="\n",file=nout)
+        nout.close()
+        
+        ## Compress all output
+        ## Do not gzip the pre-R output; read.table sometimes crashes in R
+        #logging.debug("Compressing all output")
+        #subprocess.call("gzip *txt", shell=True) 
 
-## Instead of re-writing tests in Python, we perform them using an R script, which also makes plotting easier
+    else:
+        logging.info("Previous results found; skipping ahead to filtering steps")
 
-## This tells us where the code is stored:
-codedirectory = os.path.dirname(os.path.realpath(__file__))
+    ## Instead of re-writing tests in Python, we perform them using an R script, which also makes plotting easier
 
-logging.info("Launching R script to perform filtering")
-subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile)+" "+str(alignabilitytrack), shell=True)
-logging.info("R script complete")
+    ## This tells us where the code is stored:
+    codedirectory = os.path.dirname(os.path.realpath(__file__))
 
-exit()
+    logging.info("Launching R script to perform filtering")
+    subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile)+" "+str(alignabilitytrack), shell=True)
+    logging.info("R script complete")
+
+    exit()
+
+## Execute main method
+if __name__ == '__main__':
+    main()
 
