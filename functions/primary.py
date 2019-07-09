@@ -8,7 +8,8 @@ import statistics
 import scipy.stats
 import editdistance
 import numpy
-from functions.shared_functions import *
+from functions.shared_functions import mean, sixtypes
+
 
 def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
 
@@ -325,7 +326,7 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             fishp="%.3g" % fishp
 
             ## Calculate read length and proportion of the variants occurring in the first 2/3 of the reads
-            hardmeanlength=round(mean(hardreadlengths),3)
+            #hardmeanlength=round(mean(hardreadlengths),3)
             softmeanlength=round(mean(softreadlengths),3)
             softreadlengthsrefmean=round(mean(softreadlengthsref),3) # soft-clipped read lengths
             softreadlengthsaltmean=round(mean(softreadlengthsalt),3) # soft-clipped read lengths
@@ -484,6 +485,9 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             except:
                 altmatecontigcount="NA"
 
+            ## What is the mutation type?
+            mtype=sixtypes(str(variant.REF),str(variant.ALT[0]))
+
             ## THIS IS WHERE WE WRITE OUTPUT
             outputstring=str(variant.CHROM)+":"+str(variant.POS)+":"+str(variant.REF)+":"+str(variant.ALT[0])+"\t"+\
             str(variant.CHROM)+"\t"+\
@@ -535,7 +539,8 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             str(refbadorientationprop)+"\t"+\
             str(altbadorientationprop)+"\t"+\
             str(refmatecontigcount)+"\t"+\
-            str(altmatecontigcount)
+            str(altmatecontigcount)+"\t"+\
+            str(mtype)
 
             #print(outputstring) # print to screen
             #print(outputstring,file=log) # print to log file
@@ -549,6 +554,5 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
     ## Announce completion
     logging.info("Finished processing "+filename+" chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" containing "+str(len(myvcf))+" records")
 
-    ## Return the variants
+    ## Return variants
     return(allvariants)
-

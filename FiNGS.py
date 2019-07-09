@@ -23,7 +23,9 @@
 
 #### TO DO LIST #########################################
 
-## Do not gzip the pre-R output; read.table sometimes crashes in R
+## Need to add these two filters; these can be done using pybedtools
+    #pdata=filterontarget(pdata,bedfile)
+    #pdata=filteralign(pdata,alignfile)
 
 ## Tumor-only (single BAM) mode
 ## Enhance simple indel support
@@ -39,9 +41,12 @@ import argparse
 import math
 import gzip
 import subprocess
+import csv
+import datetime
 
-from functions.shared_functions import vcfcount, vcfyield
+from functions.shared_functions import vcfcount, vcfyield, quantilewithnas
 from functions.primary import primary
+from functions.filter_functions import applyfilters
 from joblib import Parallel, delayed
 
 def main():
@@ -53,14 +58,14 @@ def main():
             sys.stderr.write('error: %s\n' % message)
             self.print_help()
             sys.exit(2)
-    parser = MyParser(description="FiNGS: Filters for Next Generation Sequencing",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser=MyParser(description="FiNGS: Filters for Next Generation Sequencing",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-v", type=str, help="absolute path to VCF file",required=True)
     parser.add_argument("-t", type=str, help="absolute path to tumor BAM",required=True)
     parser.add_argument("-n", type=str, help="absolute path to normal BAM",required=True)
     parser.add_argument("-a", type=str, help="name of alignability file to use (default is None, can be hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128)",required=False,default="None")
     parser.add_argument("-b", type=str, help="absolute path to BED file",required=False,default="None")
     parser.add_argument("-d", type=str, help="absolute path to output directory",required=False,default="results")
-    parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is FiNGS/R/filter_parameters.txt",required=False,default="default")
+    parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is filter_parameters.txt",required=False,default="filter_parameters.txt")
     parser.add_argument("-c", type=int, help="number of records to process per chunk",required=False,default=100)
     parser.add_argument("-m", type=int, help="maximum read depth to process",required=False,default=1000)
     parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)",required=False,default=-1)
@@ -68,7 +73,7 @@ def main():
     parser.add_argument("--overwrite", help="Overwrite previous results if they exist?",required=False,default=False,action='store_true')
     parser.add_argument("--PASSonlyin", help="Only use variants with that the original caller PASSed?",required=False,default=False,action='store_true')
     parser.add_argument("--PASSonlyout", help="Only write PASS variants to the output VCF",required=False,default=False,action='store_true')
-    args = parser.parse_args()
+    args=parser.parse_args()
 
     ## Turn arguments into a nice string for printing
     printargs=str(sys.argv)
@@ -92,7 +97,7 @@ def main():
     ## Create directory to put results in
     ## Trycatch prevents exception if location is unwritable 
     #################################################################################################################
-    sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
+    #sys.tracebacklimit=None ## This line limits the complexity of error messages - turn it off for full tracebacks ##
     #################################################################################################################
     try:
         os.makedirs(resultsdir,exist_ok=True)
@@ -120,7 +125,9 @@ def main():
         logging.debug("Debugging mode enabled")
 
     ## Write the command line parameters to the log file
+    starttime=datetime.datetime.now()
     logging.info("FiNGS was invoked using this command: "+printargs)
+    logging.info("Start time is: "+str(starttime))
     logging.info("VCF is: "+str(vcfpath))
     logging.info("Tumor BAM is: "+str(tbampath))
     logging.info("Normal BAM is: "+str(nbampath))
@@ -141,19 +148,36 @@ def main():
         logging.info("ERROR: The alignability track is not one of hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128")
         sys.exit()
 
-    ## Define filename prefixes for output..
-    tfilename = "tumor"
-    nfilename = "normal"
+    ## If the parameter file is the default value, create an absolute path to it;
+    if(parameters=="filter_parameters.txt"):
+        codedirectory = os.path.dirname(os.path.realpath(__file__))
+        parameters = os.path.join(codedirectory,parameters)
+    ## Read filtering parameters into a dictionary
+    logging.info("Reading filtering parameters from this file: "+parameters)    
+    pdict={}
+    try:
+        with open(parameters) as tsvin:
+            tsvin = csv.reader(tsvin, delimiter='\t')
+            for row in tsvin:
+                pdict[row[0]]=float(row[1])
+    except Exception as e:
+        print("CRITICAL ERROR: unreadable filter parameter file: "+str(e))
+        sys.exit()
 
     ## Check for existing data; if they exist, skip straight to the R filtering phase
-    tdata=resultsdir+"/"+tfilename+".combined.txt"
-    ndata=resultsdir+"/"+nfilename+".combined.txt"
+    tdata=resultsdir+"/tumor.combined.txt.gz"
+    ndata=resultsdir+"/normal.combined.txt.gz"
+    sdata=resultsdir+"/summarystats.txt.gz"
 
     if(args.overwrite or (not os.path.exists(ndata) and not os.path.exists(tdata))):
 
         ## Find size of VCF; vital for chunking and estimating runtime
         logging.info("VCF line counting begun")
-        nvcflines=vcfcount(vcfpath)
+        try:
+            nvcflines=vcfcount(vcfpath)
+        except Exception as e:
+            print("CRITICAL ERROR: unreadable VCF file: "+str(e))
+            sys.exit()
         maxchunks=math.ceil(nvcflines/chunksize)
         logging.info("VCF contains "+str(nvcflines)+" records")
 
@@ -169,35 +193,50 @@ def main():
         normvars=Parallel(n_jobs=njobs, backend="threading")(delayed(primary)(vcfchunk,nbampath,"normal",chunknumber,maxchunks,maxdepth,args.PASSonlyin) for chunknumber,vcfchunk in enumerate(vcfyield(vcf_reader,chunksize,nvcflines)))
         ## End of multithreaded code:
 
+        ## Variables to store aggregate values for later filtering e.g. global averages
+        strandbiastumor=list()
+
         ## Output all chunks into a single file per sample
-        logging.debug("Outputting tumor data")
-        tout=open(tdata, 'w')
+        logging.info("Writing tumor data to temporary file: "+tdata)
+        tout=gzip.open(tdata, 'wt')
         for LINE in tumvars:
-            print(*LINE,sep="\n",file=tout)
+            if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
+                tcsv = csv.reader(LINE, delimiter='\t')
+                strandbiastumor.append([item[37] for item in tcsv])  # hardcoded location of sb metric
+                print(*LINE,sep="\n",file=tout)
         tout.close()
 
-        logging.debug("Outputting normal data")
-        nout=open(ndata, 'w')
+        logging.info("Writing normal data to temporary file: "+ndata)
+        nout=gzip.open(ndata, 'wt')
         for LINE in normvars:
-            print(*LINE,sep="\n",file=nout)
+            if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
+                print(*LINE,sep="\n",file=nout)
         nout.close()
-        
-        ## Compress all output
-        ## Do not gzip the pre-R output; read.table sometimes crashes in R
-        #logging.debug("Compressing all output")
-        #subprocess.call("gzip *txt", shell=True) 
+
+        ## Convert list of lists into a single list
+        strandbiastumor=[item for sublist in strandbiastumor for item in sublist]
+        ## If strandbias isn't a specified filter, set the value to 0 so it can still be written
+        try:
+            sbquantile=pdict["strandbias"]
+        except:
+            sbquantile=0
+        strandbiastumorq=quantilewithnas(strandbiastumor,sbquantile)
+
+        ## Write any summary stats to a file
+        logging.info("Writing summary data to temporary file: "+sdata)
+        sout=gzip.open(sdata, 'wt')
+        print("strandbiastumorq"+"\t"+str(strandbiastumorq),file=sout)
+        sout.close()
 
     else:
         logging.info("Previous results found; skipping ahead to filtering steps")
 
-    ## Instead of re-writing tests in Python, we perform them using an R script, which also makes plotting easier
+    ## Filter data
+    applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,args.PASSonlyin,args.PASSonlyout)
 
-    ## This tells us where the code is stored:
-    codedirectory = os.path.dirname(os.path.realpath(__file__))
-
-    logging.info("Launching R script to perform filtering")
-    subprocess.call("Rscript --vanilla "+codedirectory+"/R/filter_main.R "+codedirectory+" "+parameters+" "+resultsdir+" "+tdata+" "+ndata+" "+vcfpath+" "+str(args.PASSonlyin)+" "+str(args.PASSonlyout)+" "+str(bedfile)+" "+str(alignabilitytrack), shell=True)
-    logging.info("R script complete")
+    endtime=datetime.datetime.now()
+    logging.info("End time is: "+str(endtime))
+    logging.info("Total time taken: "+str(endtime-starttime))
 
     exit()
 
