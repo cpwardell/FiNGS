@@ -91,15 +91,14 @@ def sixtypes(ref,alt):
 ## Returns 0 for for empty vectors
 def quantilewithnas(listwithnas,quantile):
     numerics=[]
-    result=0
     for element in listwithnas:
         try:
             numerics.append(float(element))
         except:
             continue
-        try:
-            result=numpy.quantile(numerics,1-quantile)
-        except:
-            continue
+    try:
+        result=numpy.quantile(numerics,1-quantile)
+    except:
+        result=0
     return(result)
 

@@ -221,7 +221,6 @@ def main():
         except:
             sbquantile=0
         strandbiastumorq=quantilewithnas(strandbiastumor,sbquantile)
-
         ## Write any summary stats to a file
         logging.info("Writing summary data to temporary file: "+sdata)
         sout=gzip.open(sdata, 'wt')
