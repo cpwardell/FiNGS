@@ -341,9 +341,7 @@ def filtercheck(pdict):
         if key in truekeys:
             continue
         else:
-            print("CRITICAL ERROR: check filter parameter file (-p flag, default is \"filter_parameters.txt\"),\n\
-this filter is not in the acceptable list:\t"+str(key)+"\n\
-Acceptable filters are:"+str(truekeys))
+            print("CRITICAL ERROR: check filter parameter file (-p flag, default is \"filter_parameters.txt\"),\nthis filter is not in the acceptable list:\t"+str(key)+"\nAcceptable filters are:"+str(truekeys))
             sys.exit()
     logging.info("Checking filter names - complete")
 
