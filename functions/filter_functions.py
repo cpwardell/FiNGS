@@ -53,7 +53,7 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,PASSonlyin,PASSonlyo
 
     ####################################################
     ## Use the filter results to write VCF results
-    vfile=resultsdir+"/"+os.path.splitext(vcfpath)[0]+".filtered.vcf"
+    vfile=resultsdir+"/"+os.path.splitext(os.path.basename(vcfpath))[0]+".filtered.vcf"
     logging.info("Writing filtered VCF to file: "+vfile)
 
     with open(vfile, "w") as out_vcf:
