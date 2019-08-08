@@ -3,7 +3,7 @@ maximumdepth	1000
 minaltcount	3
 minbasequality	30
 zeroproportion	0.05
-strandbias	0.1
+strandbiasprop	0.1
 minmapquality	50
 minmapqualitydifference	5
 enddistance	10
