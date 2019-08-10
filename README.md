@@ -2,7 +2,7 @@
   <img src="/www/fings_logo_20190809_color_banner.png">
 </p>
 
-# FiNGS
+# <span style="color:#8a0707">F</span></span><span style="color:#b2b2b2">***i***</span>NGS: <span style="color:#8a0707">***F***</span><span style="color:#b2b2b2">***i***</span>lters for ***N***ext ***G***eneration ***S***equencing
 
 ## Introduction
 Somatic variant callers detect differences between sequencing data produced from matched tumor-normal pairs aligned to a reference genome. Confounding factors such as purity of the samples, artifacts introduced by sequencing chemistry, the alignment algorithm and the incomplete and repetitive nature of reference genomes all lead to variant calls that are extremely rich in false positives.  
