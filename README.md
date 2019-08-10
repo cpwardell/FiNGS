@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="/www/fings_logo_20190809_color_banner.png">
+</p>
+
 # FiNGS
 
 ## Introduction
@@ -8,31 +12,31 @@ We have developed Filters for Next Generation Sequencing (FiNGS), software writt
 ## Availability
 FiNGS is released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS).
 
-## Quickstart guide, with example data and test
-You have two options for installing and running FiNGS; a standalone installation or Docker.
+## Dependencies
+Python 3
 
-### Standalone installation
-A more advanced guide is below. Briefly:
+## Quickstart guide, with example data and test
+You have three options for running FiNGS; 
+1. Download directly from GitHub
+2. Download using Bioconda
+3. Download using Docker
+
+### Standalone installation via GitHub
+Here we will clone the git repository and run the included example script in the `exampledata` directory.
 ```
 git clone https://github.com/cpwardell/FiNGS.git
-cd FiNGS
-chmod +x install_FiNGS_dependencies.sh
-sudo ./install_FiNGS_dependencies.sh
-python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf
-```
-
-You can test that your installation works using some example data in the included `exampledata` directory. It contains a VCF and two indexed BAM files. 
-```
-cd exampledata
+cd FiNGS/exampledata
 python3 ../FiNGS.py -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 ```
-You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the various outputs.
+You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the output.
+
+### Bioconda installation
 
 ### Docker installation
 This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on Ubuntu 16.04. 
 You need to get a copy of the Dockerfile in this repository; below I use "wget" on Linux to download it, but you could just as easily 
 copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows
-and assume that you're in the same directory as the dockerfile named "Dockerfile".
+and assumes that you're in the same directory as the dockerfile named "Dockerfile".
 
 ```
 # Download the Dockerfile from this address:
@@ -65,7 +69,7 @@ python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/
 ```
 
 ## Advanced standalone installation guide
-FiNGS depends on Python3, R, and several modules/packages for each.  The included script `FiNGS/install_FiNGS_dependencies.sh` should install all dependencies, but this can be manually performed as below.
+FiNGS depends on Python3 and several packages.
 
 On Debian-based systems such as Ubuntu, you can install Python3 and pip, the recommended tool for installing Python packages using the following commands:
 ```
@@ -80,20 +84,6 @@ pip3 install pysam
 pip3 install editdistance
 pip3 install scipy
 pip3 install joblib
-```
-
-To install R and some components required by Bioconductor, use the following commands:
-```
-apt-get -y install r-base
-apt-get -y install libcurl4-openssl-dev
-apt-get -y install libxml2-dev
-apt-get -y install zlib1g-dev
-```
-
-From within R, run the following commands to install the required R package:
-```
-source("https://bioconductor.org/biocLite.R")
-biocLite("VariantAnnotation")
 ```
 
 ## Basic usage and outputs
