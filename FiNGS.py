@@ -23,12 +23,8 @@
 
 #### TO DO LIST #########################################
 
-## Need to add these two filters; these can be done using pybedtools
-# pdata=filterontarget(pdata,bedfile)
-# pdata=filteralign(pdata,alignfile)
-
 ## Tumor-only (single BAM) mode
-## Enhance simple indel support
+## Add indel support
 
 #### END OF TO DO LIST #########################################
 import os
@@ -60,8 +56,6 @@ def main():
     parser.add_argument("-v", type=str, help="absolute path to VCF file", required=True)
     parser.add_argument("-t", type=str, help="absolute path to tumor BAM", required=True)
     parser.add_argument("-n", type=str, help="absolute path to normal BAM", required=True)
-    parser.add_argument("-a", type=str, help="name of alignability file to use (default is None, can be hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128)", required=False, default="None")
-    parser.add_argument("-b", type=str, help="absolute path to BED file covering target regions",required=False,default="None")
     parser.add_argument("-r", type=str, help="absolute path to faidx indexed reference genome; required if using \'repeats\' filter", required=False, default="None")
     parser.add_argument("-d", type=str, help="absolute path to output directory", required=False,default="results")
     parser.add_argument("-p", type=str, help="absolute path to filtering parameters (default is filter_parameters.txt", required=False, default="filter_parameters.txt")
@@ -70,7 +64,7 @@ def main():
     parser.add_argument("-j", type=int, help="number of processors to use (default is -1, use all available resources)", required=False, default=-1)
     parser.add_argument("--ICGC", help="Use filters identical to those recommended by the ICGC (Alioto et al, 2015). Overrides \'-p\' flag",required=False, default=False,action='store_true')
     parser.add_argument("--logging", help="Set logging level (default is INFO, can be DEBUG for more detail or NOTSET for silent)", required=False, default="INFO")
-    parser.add_argument("--overwrite", help="Overwrite previous results if they exist?", required=False, default=False, action='store_true')
+    parser.add_argument("--overwrite", help="Overwrite previous results if they exist", required=False, default=False, action='store_true')
     parser.add_argument("--PASSonlyin", help="Only use variants with that the original caller PASSed?", required=False, default=False, action='store_true')
     parser.add_argument("--PASSonlyout", help="Only write PASS variants to the output VCF", required=False, default=False, action='store_true')
     args=parser.parse_args()
@@ -86,8 +80,6 @@ def main():
     vcfpath=args.v
     tbampath=args.t
     nbampath=args.n
-    alignabilitytrack=args.a
-    bedfile=args.b
     referencegenome=args.r
     resultsdir=args.d
     parameters=args.p
@@ -136,8 +128,6 @@ def main():
     logging.info("Output directory is: "+str(resultsdir))
     logging.info("Filtering parameter file is: "+str(parameters))
     logging.info("Reference genome file is: "+str(referencegenome))
-    logging.info("Alignability file is: "+str(alignabilitytrack))
-    logging.info("Bedfile is: "+str(bedfile))
     logging.info("Number of records per chunk is: "+str(chunksize))
     logging.info("Maximum read depth is: "+str(maxdepth))
     logging.info("Processor threads used is: "+str(njobs))
@@ -146,11 +136,7 @@ def main():
     logging.info("Process only caller-PASSed variants?: "+str(args.PASSonlyin))
     logging.info("Output only FiNGS-PASSed variants?: "+str(args.PASSonlyout))
 
-    ## Check that the alignability file is one of the specified possibilities, else exit
-    if not alignabilitytrack in ["None","hg19.75","hg19.100","hg19.128","hg38.75","hg38.100","hg38.128"]:
-        logging.info("ERROR: The alignability track is not one of hg19.75, hg19.100, hg19.128, hg38.75, hg38.100, hg38.128")
-        sys.exit()
-
+    
     ## If the parameter file is the default value or if using ICGC parameters, create an absolute path to it;
     if(parameters=="filter_parameters.txt" or args.ICGC):
         codedirectory = os.path.dirname(os.path.realpath(__file__))
