@@ -233,6 +233,8 @@ def densityplot(pcol,vline,title,goodside,pdf):
     ## Discard any nan values
     pcol=pcol.dropna()
     ## Produces the initial seaborn plot
+    ## We suppress warnings in case empty lists are passed in
+    numpy.seterr(divide='ignore', invalid='ignore')
     plt=sns.distplot(pcol, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"}, hist=False)#,hist_kws={"color": "grey", "alpha": 0})
     plt.axvline(vline,linestyle="--",color=bloodred)
     plt.set_title(title+str(round(vline,3)))
