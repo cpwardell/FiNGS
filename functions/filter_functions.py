@@ -7,12 +7,30 @@ import gzip
 import csv
 import scipy.stats
 import vcf
-import pysam
 import numpy
+import pandas
+import seaborn as sns
+import statsmodels.nonparametric.api as smnp
+import matplotlib.backends.backend_pdf
 
+from matplotlib import pyplot
 from collections import OrderedDict
 from itertools import repeat, product
 
+## Define column names for tdata and ndata
+cnames=["UID","CHR","POS","REF","ALT","refcount","altcount","varianttype","depth","vaf","raf","oaf",
+        "medianbaseq","medianbaseqref","medianbaseqalt","medianmapq","medianmapqref","medianmapqalt",
+        "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
+        "distancetoend1median","mad1","distancetoend2median","mad2","distancetoend1medianref","madref1",
+        "distancetoend2medianref","madref2","distancetoend1medianalt","madalt1","distancetoend2medianalt",
+        "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp","F1R2","F2R1","FoxoG","refld","altld",
+        "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
+        "altmatecontigcount","sixtypes"]
+
+## Define some colors for plotting
+bloodred="#870202"
+badred="#E41A1C"
+goodgreen="#4DAF4A"
 
 ## Main filter function; a list of the filters that are applied
 def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASSonlyin,PASSonlyout):
@@ -103,6 +121,140 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
     writer.close()
     logging.info("Writing VCF complete")
 
+    ## Produce plots
+    ## To produce plots, we need the whole dataset;
+    ## read in tdata/ndata
+    ## Loop through pdict and produce plots according to what's in there
+    logging.info("Writing plots to file: "+resultsdir+"/plots.pdf")
+    filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir)
+    logging.info("Writing plots complete")
+
+def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
+    ## Read in tdata and ndata
+    try:
+        tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=None, names=cnames)
+        ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=None, names=cnames)
+
+        ## Crate pdf output file and put plots in it; summary table first
+        pdf = matplotlib.backends.backend_pdf.PdfPages(resultsdir+"/plots.pdf")
+        summaryplots(fdata,pdict,pdf)
+        for key in pdict.keys():
+            if key == "minimumdepth":
+                densityplot(tdf["depth"],pdict["minimumdepth"],"Minimum tumor depth: ","right",pdf)
+                densityplot(ndf["depth"],pdict["minimumdepth"],"Minimum normal depth: ","right",pdf)
+            if key == "maximumdepth":
+                densityplot(tdf["depth"],pdict["maximumdepth"],"Maximum tumor depth: ","left",pdf)
+                densityplot(ndf["depth"],pdict["maximumdepth"],"Maximum normal depth: ","left",pdf)
+            if key == "minaltcount":
+                densityplot(tdf["altcount"],pdict["minaltcount"],"Minimum number of ALT reads in tumor: ","right",pdf)
+            if key == "minbasequality":
+                densityplot(tdf["medianbaseqalt"],pdict["minbasequality"],"Minimum median base quality for ALT in tumor: ","right",pdf)
+                densityplot(tdf["medianbaseqref"],pdict["minbasequality"],"Minimum median base quality for REF in tumor: ","right",pdf)
+                densityplot(ndf["medianbaseqref"],pdict["minbasequality"],"Minimum median base quality for REF in normal: ","right",pdf)
+            if key == "zeroproportion":
+                densityplot(tdf["zerospersite"],pdict["zeroproportion"],"Maximum proportion of zero mapping quality reads in tumor: ","left",pdf)
+                densityplot(ndf["zerospersite"],pdict["zeroproportion"],"Maximum proportion of zero mapping quality reads in normal: ","left",pdf)
+            if key == "minmapquality":
+                densityplot(tdf["medianmapqalt"],pdict["minmapquality"],"Minimum median mapping quality of ALT reads in tumor: ","right",pdf)
+            if key == "enddistance":
+                densityplot(tdf["shortestdistancetoendmedian"],pdict["enddistance"],"Minimum median shortest distance\nto either aligned end in tumor: ","right",pdf)
+            if key == "enddistancemad":
+                densityplot(tdf["madaltshort"],pdict["enddistancemad"],"Minimum MAD of median shortest distance\nto either aligned end in tumor: ","right",pdf)
+            if key == "editdistance":
+                densityplot(tdf["altld"],pdict["editdistance"],"Maximum edit distance of ALT reads in tumor: ","left",pdf)
+                densityplot(tdf["refld"],pdict["editdistance"]-1,"Maximum edit distance of REF reads in tumor: ","left",pdf)
+            if key == "minvaftumor":
+                densityplot(tdf["vaf"],pdict["minvaftumor"],"Minimum VAF in tumor: ","right",pdf)
+            if key == "maxoaftumor":
+                densityplot(tdf["oaf"],pdict["maxoaftumor"],"Maximum other allele frequency (OAF) in tumor: ","left",pdf)
+            if key == "maxsecondtumor":
+                densityplot(tdf["altsecondprop"],pdict["maxsecondtumor"],"Maximum proportion of secondary alignments in tumor: ","left",pdf)
+            if key == "strandbiasprop":
+                densityplot(tdf["sb"],sdict["strandbiastumorq"],"Strand bias exclusion proportion: "+str(pdict["strandbiasprop"])+"\nThreshold: ","left",pdf)
+            if key == "strandbias":
+                densityplot(tdf["sb"],pdict["strandbias"],"Maximum strand bias in tumor: ","left",pdf)
+            if key == "maxaltcount":
+                densityplot(ndf["altcount"],pdict["maxaltcount"],"Maximum number of ALT reads in normal: ","left",pdf)
+            if key == "maxvafnormal":
+                densityplot(ndf["vaf"],pdict["maxvafnormal"],"Maximum VAF in normal: ","left",pdf)
+            if key == "maxbadorient":
+                densityplot(ndf["refbadorientationprop"],pdict["maxbadorient"],"Maximum proportion of inversion orientation\nreads in normal: ","left",pdf)
+            if key == "minmapqualitydifference":
+                densityplot(abs(ndf["medianmapqref"]-tdf["medianmapqalt"]),pdict["minmapqualitydifference"],"Maximum difference between median mapping quality\nof ALT reads in tumor and REF reads in normal: ","left",pdf)
+#            if key == "foxog":  # NEED AN X Y SCATTER PLOT
+#                scatterplot(tdf["F1R2"],tdf["F2R1"],tdf["sixtypes"],"FoxoG plot",pdf)
+#                fdict["foxogtumor"]=filterfoxog(pair[0]["REF"],pair[0]["sixtypes"],pair[0]["F1R2"],pair[0]["F2R1"],pdict["foxog"])  # TUMOR
+#                vcf_reader.filters[18]=["foxogtumor","Maximum FoxoG artefact proportion: "+str(pdict["foxog"])]
+        pdf.close()
+
+    except Exception as e:
+        print("CRITICAL ERROR: error during plotting: "+str(e))
+        sys.exit()
+
+## Summary plot function
+def summaryplots(fdata,pdict,pdf):
+    ## Read filter data back in
+    fdf = pandas.read_csv(fdata, compression='gzip', sep="\t", header=0)
+    
+    ## Get rid of non-filter columns
+    fdf=fdf[fdf.columns[range(4,fdf.shape[1])]]
+    
+    ## Create summary dataframe
+    sumfdf=pandas.DataFrame(fdf,index=["PASS","Fail"]) 
+    sumfdf["TOTAL"]=-1 # Assign value to total column so it is always sorted to top
+    for column in fdf.columns:
+        sumfdf[column]=[list(fdf[column]).count(True),list(fdf[column]).count(False)]
+    sumfdf=sumfdf.transpose()
+    sumfdf=sumfdf.sort_values(by="PASS")
+
+    ## Assign real counts to total row
+    ## If all elements sum to length of row, increment counter
+    totalpass=0
+    for idx, row in fdf.iterrows():
+        if sum(row) == fdf.shape[1]:
+            totalpass+=1
+    sumfdf.loc["TOTAL"]=[totalpass,fdf.shape[0]-totalpass]
+
+    ## Create axes for plot and set font size for labels
+    ## [left, bottom, width, height]
+    sns.set(font_scale=0.60,style="white") 
+    ax=pyplot.axes([0.21,0.11,0.775,0.77]) 
+
+    ## Produce plot and reset size of annotation text in boxes
+    plt=sns.heatmap(sumfdf,annot=True, fmt="d", cbar=False, cmap="YlGnBu",ax=ax,annot_kws={"size": 10})#,ax=ax)
+    #plt.get_figure().savefig("results/summary.png")
+    pdf.savefig()
+    plt.get_figure().clf() # clears figure to prevent multiple overlapping plots
+
+## Scatterplot function for foxog data
+#def scatterplot(F1,F2,sixtypes,foxocut):
+
+def densityplot(pcol,vline,title,goodside,pdf):
+    ## Discard any nan values
+    pcol=pcol.dropna()
+    ## Produces the initial seaborn plot
+    plt=sns.distplot(pcol, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"}, hist=False)#,hist_kws={"color": "grey", "alpha": 0})
+    plt.axvline(vline,linestyle="--",color=bloodred)
+    plt.set_title(title+str(round(vline,3)))
+
+    ## This block calculates the areas either side of the threshold line for shading
+    ## We ensure y values are never less than 0
+    kde = smnp.KDEUnivariate(pcol.astype(numpy.float64))
+    kde.fit("gau", "scott", "gau", gridsize=100, cut=3, clip=(-numpy.inf, numpy.inf))
+    x, y = kde.support, kde.density
+    y=[max(x,0) for x in y] 
+ 
+    ## Apply shading
+    if(goodside=="left"):
+        plt.fill_between(x,0,y,color=goodgreen, where = x < vline)
+        plt.fill_between(x,0,y,color=badred, alpha=1, where = x > vline)
+    if(goodside=="right"):
+        plt.fill_between(x,0,y,color=badred, where = x < vline)
+        plt.fill_between(x,0,y,color=goodgreen, alpha=1, where = x > vline)
+    pdf.savefig()
+    plt.get_figure().clf() # clears figure to prevent multiple overlapping plots
+
+
 
 def filtergroup(flist,pdict,vcf_reader):
     ## Iterate through list of filters and add any as required
@@ -144,7 +296,7 @@ def snvcluster(flist,nlength,nsnvs):
                 strikes+=1
             if(int(flist[slot]["altcount"])>=2):
                 strikes+=1
-            ## If all condiations are met, iterate counter
+            ## If all conditions are met, iterate counter
             if(strikes==4):
                 localmuts+=1
 
@@ -196,15 +348,6 @@ def generaterepeats(nlength):
 
 ## Yields pairs of lists of metrics for filtering
 def metricyielder(tdata,ndata):
-
-    cnames=["UID","CHR","POS","REF","ALT","refcount","altcount","varianttype","depth","vaf","raf","oaf",
-            "medianbaseq","medianbaseqref","medianbaseqalt","medianmapq","medianmapqref","medianmapqalt",
-            "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
-            "distancetoend1median","mad1","distancetoend2median","mad2","distancetoend1medianref","madref1",
-            "distancetoend2medianref","madref2","distancetoend1medianalt","madalt1","distancetoend2medianalt",
-            "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp","F1R2","F2R1","FoxoG","refld","altld",
-            "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
-            "altmatecontigcount","sixtypes"]
 
     logging.info("Reading tumor data from this file: "+tdata)
     logging.info("Reading normal data from this file: "+ndata)
@@ -303,8 +446,8 @@ def filterminmapquality(testvalue,minmapquality):
 
 
 #################### Maximum mapping quality difference ############
-## Median mapping quality of alt reads in the tumor must be within 5 of
-## median mapping quality of ref reads in the normal
+## Median mapping quality of alt reads in the tumor must be within
+## minmapqualitydifference of median mapping quality of ref reads in the normal
 def filterminmapqualitydifference(testvaluet,testvaluen,minmapqualitydifference):
     result=False
     try:
