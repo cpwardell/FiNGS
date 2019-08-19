@@ -119,6 +119,9 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             vaf=vafcalc(altcount,depth)  # VAF
             raf=vafcalc(refcount,depth)  # RAF
             oaf=oafcalc(refcount,altcount,depth)  # OAF
+            altsb=oneallelestrandbias(FA,RA)
+            refsb=oneallelestrandbias(FR,RR)
+            allsb=simplestrandbias(FR,FA,RR,RA)
             sb=strandbias(FR,FA,RR,RA)  # Strand bias
             gsb=gatkstrandbias(FR,FA,RR,RA)  # GATK strand bias
             fishp=scipy.stats.fisher_exact([[FA,RA],[FR,RR]])[1]  # Fisher's exact test pvalue for strand bias
@@ -174,7 +177,8 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                                                     distancetoend1medianref,madref1,distancetoend2medianref,madref2,
                                                     distancetoend1medianalt,madalt1,distancetoend2medianalt,madalt2,
                                                     shortestdistancetoendmedian,madaltshort,
-                                                    sb,gsb,fishp,F1R2,F2R1,FoxoG,
+                                                    sb,gsb,fishp,FR,FA,RR,RA,altsb,refsb,allsb,
+                                                    F1R2,F2R1,FoxoG,
                                                     refld,altld,
                                                     refsecondprop,altsecondprop,
                                                     refbadorientationprop,altbadorientationprop,
@@ -195,6 +199,25 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
 
 
 ################ FUNCTIONS ######################
+
+## Calculate extremely basic strand bias
+def oneallelestrandbias(forward,reverse):
+    try:
+        sb=min(forward/(forward+reverse),reverse/(reverse+forward))
+        sb=round(sb,3)
+    except:
+        sb="NA"
+    return(sb)
+
+def simplestrandbias(FR,FA,RR,RA):
+    try:
+        forward=FR+FA
+        reverse=RR+RA
+        sb=min(forward/(forward+reverse),reverse/(reverse+forward))
+        sb=round(sb,3)
+    except:
+        sb="NA"
+    return(sb)
 
 
 ## Calculate strand bias

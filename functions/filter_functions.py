@@ -7,6 +7,7 @@ import gzip
 import csv
 import scipy.stats
 import vcf
+import pysam
 import numpy
 import pandas
 import seaborn as sns
@@ -23,7 +24,8 @@ cnames=["UID","CHR","POS","REF","ALT","refcount","altcount","varianttype","depth
         "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
         "distancetoend1median","mad1","distancetoend2median","mad2","distancetoend1medianref","madref1",
         "distancetoend2medianref","madref2","distancetoend1medianalt","madalt1","distancetoend2medianalt",
-        "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp","F1R2","F2R1","FoxoG","refld","altld",
+        "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp",
+        "FR","FA","RR","RA","altsb","refsb","allsb","F1R2","F2R1","FoxoG","refld","altld",
         "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
         "altmatecontigcount","sixtypes"]
 
@@ -173,6 +175,8 @@ def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
                 densityplot(tdf["sb"],sdict["strandbiastumorq"],"Strand bias exclusion proportion: "+str(pdict["strandbiasprop"])+"\nThreshold: ","left",pdf)
             if key == "strandbias":
                 densityplot(tdf["sb"],pdict["strandbias"],"Maximum strand bias in tumor: ","left",pdf)
+            if key == "strandbiassimple":
+                densityplot(tdf["altsb"],pdict["strandbiassimple"],"Maximum strand bias of ALT reads in tumor: ","right",pdf)
             if key == "maxaltcount":
                 densityplot(ndf["altcount"],pdict["maxaltcount"],"Maximum number of ALT reads in normal: ","left",pdf)
             if key == "maxvafnormal":
@@ -593,10 +597,22 @@ def filterstrandbias(testvalue,strandbias):
         testvalue=float(testvalue)
     except:
         testvalue=0
-    if(testvalue > strandbias):
+    if(testvalue <= strandbias):
         result=True
     return(result)
 
+## Variants with no strand bias value PASS by default
+def filterstrandbiassimple(altsb,allsb,strandbias):
+    result=False
+    try:
+        altsb=float(altsb)
+        allsb=float(allsb)
+    except:
+        altsb=0
+        allsb=0
+    if((altsb > strandbias) or (altsb<=strandbias and allsb<=strandbias)):
+        result=True
+    return(result)
 
 ## Repeat filter
 def filterrepeats(chr,pos,nlength,repeatlist,referencegenome):
@@ -629,6 +645,7 @@ def filtercheck(pdict):
               "zeroproportion",
               "strandbiasprop",
               "strandbias",
+              "strandbiassimple",
               "repeats",
               "minmapquality",
               "minmapqualitydifference",
@@ -719,6 +736,9 @@ def filterbuild(pair,pdict,sdict,referencegenome,repeatlist,vcf_reader):
         if key == "strandbias":
             fdict["strandbias"]=filterstrandbias(pair[0]["sb"],pdict["strandbias"])  # TUMOR
             vcf_reader.filters[20]=["strandbias","Maximum strand bias in tumor: "+str(pdict["strandbias"])]
+        if key == "strandbiassimple":
+            fdict["strandbiassimple"]=filterstrandbiassimple(pair[0]["altsb"],pair[0]["allsb"],pdict["strandbiassimple"])  # TUMOR
+            vcf_reader.filters[20]=["strandbiassimple","Maximum strand bias in ALT reads in tumor: "+str(pdict["strandbiassimple"])]
         if key == "repeats":
             fdict["repeats"]=filterrepeats(pair[0]["CHR"],pair[0]["POS"],pdict["repeats"],repeatlist,referencegenome)  # TUMOR
             vcf_reader.filters[21]=["repeats","Maximum length of 1/2/3/4mer repeats around the variant position: "+str(int(pdict["repeats"]))]
