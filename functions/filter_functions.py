@@ -14,6 +14,8 @@ import seaborn as sns
 import statsmodels.nonparametric.api as smnp
 import matplotlib.backends.backend_pdf
 
+matplotlib.use('Agg') # Allows plotting without X-server; must be done before importing matplotlib.pyplot
+
 from matplotlib import pyplot
 from collections import OrderedDict
 from itertools import repeat, product
