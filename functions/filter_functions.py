@@ -14,22 +14,15 @@ import seaborn as sns
 import statsmodels.nonparametric.api as smnp
 import matplotlib.backends.backend_pdf
 
-matplotlib.use('Agg') # Allows plotting without X-server; must be done before importing matplotlib.pyplot
+#matplotlib.use('Agg') # Allows plotting without X-server; must be done before importing matplotlib.pyplot
 
 from matplotlib import pyplot
 from collections import OrderedDict
 from itertools import repeat, product
+from functions.shared_functions import colnamelist
 
 ## Define column names for tdata and ndata
-cnames=["UID","CHR","POS","REF","ALT","refcount","altcount","varianttype","depth","vaf","raf","oaf",
-        "medianbaseq","medianbaseqref","medianbaseqalt","medianmapq","medianmapqref","medianmapqalt",
-        "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
-        "distancetoend1median","mad1","distancetoend2median","mad2","distancetoend1medianref","madref1",
-        "distancetoend2medianref","madref2","distancetoend1medianalt","madalt1","distancetoend2medianalt",
-        "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp",
-        "FR","FA","RR","RA","altsb","refsb","allsb","F1R2","F2R1","FoxoG","refld","altld",
-        "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
-        "altmatecontigcount","sixtypes"]
+cnames=colnamelist()
 
 ## Define some colors for plotting
 bloodred="#870202"
@@ -54,7 +47,7 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
             for row in scsv:
                 sdict[row[0]]=float(row[1])
     except Exception as e:
-        print("CRITICAL ERROR: unreadable file: "+str(e))
+        print("CRITICAL ERROR: unreadable file: "+sdata+" "+str(e))
         sys.exit()
 
     ## Santize list of filters; does the pdict object only contain real filter names?
@@ -136,8 +129,10 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
 def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
     ## Read in tdata and ndata
     try:
-        tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=None, names=cnames)
-        ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=None, names=cnames)
+        #tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=None, names=cnames)
+        #ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=None, names=cnames)
+        tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=0)
+        ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=0)
 
         ## Crate pdf output file and put plots in it; summary table first
         pdf = matplotlib.backends.backend_pdf.PdfPages(resultsdir+"/plots.pdf")
@@ -363,7 +358,8 @@ def metricyielder(tdata,ndata):
         with gzip.open(tdata,"rt",newline="") as td, gzip.open(ndata,"rt",newline="") as nd:
             tcsv = csv.reader(td, delimiter='\t')
             ncsv = csv.reader(nd, delimiter='\t')
-
+            next(tcsv, None) # skip the headers
+            next(ncsv, None) # skip the headers
             ## We loop through both the tumor and normal data together and yield pairs of metrics 
             for trow, nrow in zip(tcsv,ncsv):
                 ## Convert list to dictionary

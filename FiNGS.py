@@ -37,7 +37,7 @@ import gzip
 import csv
 import datetime
 
-from functions.shared_functions import vcfcount, vcfyield, quantilewithnas
+from functions.shared_functions import vcfcount, vcfyield, quantilewithnas, writeheader
 from functions.primary import primary
 from functions.filter_functions import applyfilters
 from joblib import Parallel, delayed
@@ -187,6 +187,7 @@ def main():
         ## Output all chunks into a single file per sample
         logging.info("Writing tumor data to temporary file: "+tdata)
         tout=gzip.open(tdata, 'wt')
+        writeheader(tout)
         for LINE in tumvars:
             if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
                 tcsv = csv.reader(LINE, delimiter='\t')
@@ -196,6 +197,7 @@ def main():
 
         logging.info("Writing normal data to temporary file: "+ndata)
         nout=gzip.open(ndata, 'wt')
+        writeheader(nout)
         for LINE in normvars:
             if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
                 print(*LINE,sep="\n",file=nout)
