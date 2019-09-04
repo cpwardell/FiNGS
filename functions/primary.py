@@ -271,7 +271,7 @@ def oafcalc(refcount,altcount,depth):
 ## If sum of F1R2 and F2R1 is zero, all reads have an indel in them, so it should be removed
 def foxogcalc(REF,F1R2,F2R1):
     FoxoG="NA"
-        try:
+    try:
         if((F1R2 + F2R1)!=0):
             if(REF=="C" or REF=="A"):
                 FoxoG = F2R1/(F1R2 + F2R1)
