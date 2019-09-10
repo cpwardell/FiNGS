@@ -3,7 +3,7 @@
 ##source=strelka
 ##source_version=2.8.3
 ##startTime=Tue Oct 31 14:10:58 2017
-##cmdline=/illumina/pipeline/strelka/2.8.3/bin/configureStrelkaSomaticWorkflow.py --indelCandidates manta/results/variants/candidateSmallIndels.vcf.gz --normalBam /illumina/runs/yan_working_dir/genome_in_a_bottle/genome_in_a_bottle/merged_sorted_markdups/24385-200_AH5G7WCCXX_S4_L004_aligned.sorted.mark_dups.bam --tumorBam /illumina/runs/yan_working_dir/genome_in_a_bottle/genome_in_a_bottle/merged_sorted_markdups/24385-12878-30-200_aligned.sorted.mark_dups.bam --referenceFasta /illumina/genomes/Homo_sapiens/Ensembl/GRCh37_Release75/Sequence/WholeGenomeFasta/genome.fa --runDir strelka2
+##cmdline=/illumina/pipeline/strelka/2.8.3/bin/configureStrelkaSomaticWorkflow.py --indelCandidates manta/results/variants/candidateSmallIndels.vcf.gz --normalBam /illumina/runs/chris_working_dir/genome_in_a_bottle/genome_in_a_bottle/merged_sorted_markdups/24385-200_AH5G7WCCXX_S4_L004_aligned.sorted.mark_dups.bam --tumorBam /illumina/runs/chris_working_dir/genome_in_a_bottle/genome_in_a_bottle/merged_sorted_markdups/24385-12878-30-200_aligned.sorted.mark_dups.bam --referenceFasta /illumina/genomes/Homo_sapiens/Ensembl/GRCh37_Release75/Sequence/WholeGenomeFasta/genome.fa --runDir strelka2
 ##reference=file:///illumina/genomes/Homo_sapiens/Ensembl/GRCh37_Release75/Sequence/WholeGenomeFasta/genome.fa
 ##contig=<ID=1,length=249250621>
 ##contig=<ID=2,length=243199373>

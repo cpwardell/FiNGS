@@ -14,8 +14,6 @@ import seaborn as sns
 import statsmodels.nonparametric.api as smnp
 import matplotlib.backends.backend_pdf
 
-#matplotlib.use('Agg') # Allows plotting without X-server; must be done before importing matplotlib.pyplot
-
 from matplotlib import pyplot
 from collections import OrderedDict
 from itertools import repeat, product
@@ -129,8 +127,6 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
 def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
     ## Read in tdata and ndata
     try:
-        #tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=None, names=cnames)
-        #ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=None, names=cnames)
         tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=0)
         ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=0)
 
