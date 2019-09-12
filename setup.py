@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fings",
-    version="1.6.6",
+    version="1.6.7",
     author="Christopher Wardell",
     author_email="github@cpwardell.com",
     description="Filters for Next Generation Sequencing",
