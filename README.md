@@ -19,47 +19,74 @@ We have developed Filters for Next Generation Sequencing (FiNGS), software writt
 FiNGS is open source and released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS).
 
 ## Dependencies
-Python 3
+```Python 3``` and these Python packages:  
+```
+pyvcf  
+pysam  
+numpy  
+scipy  
+pandas  
+joblib  
+seaborn  
+statsmodels  
+editdistance
+```
 
 ## Quickstart guide, with example data and test
-You have three options for running FiNGS; 
+You have a number of options for installing and running FiNGS: 
 1. Download using Bioconda (preferred)
 2. Download directly from GitHub
-3. Download using Docker/Singularity
+3. Download using pip3
+4. Download using Docker/Singularity
 
 ### Bioconda installation
-Create new conda environment
-Install package (and dependencies)
-Run example
-
-
-### Standalone installation via GitHub
-FiNGS depends on Python3 and several packages. We recommend using a Conda environment to manage Python and associated packages.
-On Debian-based systems such as Ubuntu, you can install Python3 and pip, the recommended tool for installing Python packages using the following commands:
+This method is preferred because it gives the cleanest environment and installs all dependencies, including system ones required to build dependencies like the pysam package.  You can follow the set-up instructions for Bioconda from [here](https://bioconda.github.io/user/install.htm); assuming you already have a Conda installation, set up the Bioconda channels like so:
 
 ```
-apt-get -y install python3
-apt-get -y install python3-pip
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
 ```
 
-Now Python3 and pip are installed, you may install the required Python packages:
+Create a new conda environment for fings
 ```
-pip3 install PyVCF
-pip3 install pysam
-pip3 install editdistance
-pip3 install scipy
-pip3 install joblib
+conda create -n fings python=3.7
 ```
 
+Now install the package (dependencies are installed automatically)
+```
+conda install fings
+```
+
+Locate the FiNGS package, navigate to the example data and run the script to confirm your installation is correct.
+```
+## Navigate to this directory /path/to/conda/envs/fings/lib/python3.7/site-packages/fings/exampledata/
+./test.sh
+```
+
+### GitHub installation
+The advantage of a GitHub installation is that you know exactly where your FiNGS code is; we still advise managing the dependencies listed above using Conda.
 Clone the git repository and run the included example script in the `exampledata` directory.
 ```
 git clone https://github.com/cpwardell/FiNGS.git
-cd FiNGS/exampledata
+cd FiNGS/fings/exampledata
 ./test.sh
 ```
-You should see the progress printed to the screen. When filtering is complete, a `results` directory will have been created containing the output.
 
-### Docker installation
+### python3-pip installation
+Assuming you have Python3 and pip3, you can install using pip because FiNGS lives on PyPi here: https://pypi.org/project/fings/
+```
+pip3 install fings
+```
+Locate the FiNGS package, navigate to the example data and run the script to confirm your installation is correct.
+```
+## Use pip3 to tell you where FiNGS has been installed
+pip3 show fings
+cd /go/to/fings/exampledata/
+./test.sh
+```
+
+### Docker installation - under construction...
 This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on Ubuntu 16.04. 
 You need to get a copy of the Dockerfile in this repository; below we use "wget" on Linux to download it, but you could just as easily 
 copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows
@@ -86,7 +113,7 @@ docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normal
 ```
 
 ## Suggested usage
-+ Use default filtering thresholds
++ Use default filtering thresholds (either our filters or ICGC filters)
 + Use every available processor
 + Only consider variants with a PASS filter value from the variant caller
 + Only emit variants that PASS all filters  
@@ -99,12 +126,6 @@ python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/
 
 ```
 python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf -r /path/to/reference/genome.fasta --PASSonlyin --PASSonlyout --ICGC
-```
-
-## Basic usage and outputs
-In the simplest case, provide FiNGS with paths to a VCF from a somatic variant caller and the BAM files used to produce it.
-```
-python3 FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf
 ```
 
 FiNGS will create a directory called "results" containing the following files:
@@ -122,8 +143,8 @@ All metrics collected and used for filtering are stored in these gzipped text fi
 + `summarystats.txt.gz`
 A gzipped text file containing summary stats that may be used for filtering
 
-## Advanced usage
-
+## Further notes
+The following arguments and flags are available:  
 + **-v** Required; path to the somatic variant VCF from any variant caller
 + **-t** Required; path to the tumor BAM file used to produce the VCF
 + **-n** Required; path to the normal BAM file used to produce the VCF
@@ -146,7 +167,7 @@ Run FiNGS with no additional arguments to get the help file. If there's somethin
 A paper is being prepared for submission shortly and will be referenced here when available.
 
 ## Description of filters
-FiNGS assesses variants using any combination of these possible filters. Below is a table describing them, their default thresholds and ICGC thresholds.  NA values mean that the filter is not employed in eithe the default or ICGC mode.  Users can create their own parameter file using *any* combination of filters and thresholds.
+FiNGS assesses variants using any combination of these possible filters. Below is a table describing them, their default thresholds and ICGC thresholds.  NA values mean that the filter is not employed in eithe the default or ICGC mode.  **Users can create their own tab-delimited parameter text file using *any* combination of filters and thresholds, and pass it in using the -p argument.**
 
 Filter name | Description | Default value | ICGC value
 --- | --- | --- | ---
