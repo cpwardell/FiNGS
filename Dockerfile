@@ -1,12 +1,12 @@
-# Based on Ubuntu 16.04 LTS release for stability; supported until 2021/04
-FROM ubuntu:16.04
+# Based on Miniconda3 image
+FROM continuumio/miniconda3
 
-# Update package repositories, install git,
-# fetch FiNGS from GitHub and install all dependencies
-RUN apt-get update && \
-	apt-get -y install git && \
-	git clone https://github.com/cpwardell/FiNGS.git && \
-	cd FiNGS && \
-	chmod +x install_FiNGS_dependencies.sh && \
-	./install_FiNGS_dependencies.sh
+# Update conda channels and install FiNGS
+RUN conda config --add channels defaults && \
+conda config --add channels bioconda && \
+conda config --add channels conda-forge && \
+conda install -y fings
 
+# Default entrypoint is FiNGS, default command is "--help"
+ENTRYPOINT ["python","/opt/conda/lib/python3.7/site-packages/fings/FiNGS.py"]
+CMD ["--help"]

@@ -40,7 +40,8 @@ You have a number of options for installing and running FiNGS:
 4. Download using Docker/Singularity
 
 ### Bioconda installation
-This method is preferred because it gives the cleanest environment and installs all dependencies, including system ones required to build dependencies like the pysam package.  You can follow the set-up instructions for Bioconda from [here](https://bioconda.github.io/user/install.htm); assuming you already have a Conda installation, set up the Bioconda channels like so:
+FiNGS is on Bioconda here: https://bioconda.github.io/recipes/fings/README.html  
+This method is preferred because it gives the cleanest environment and installs all dependencies, including system ones required to build dependencies like the pysam package.  You can follow the set-up instructions for Bioconda from [here](https://bioconda.github.io/user/install.html); assuming you already have a Conda installation, set up the Bioconda channels like so:
 
 ```
 conda config --add channels defaults
@@ -48,9 +49,10 @@ conda config --add channels bioconda
 conda config --add channels conda-forge
 ```
 
-Create a new conda environment for fings
+Create a new conda environment for FiNGS and activate it
 ```
 conda create -n fings python=3.7
+conda activate fings
 ```
 
 Now install the package (dependencies are installed automatically)
@@ -86,8 +88,19 @@ cd /go/to/fings/exampledata/
 ./test.sh
 ```
 
-### Docker installation - under construction...
-This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on Ubuntu 16.04. 
+### Docker installation and usage 
+This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on the official Miniconda3 image and pulls the current Bioconda version of FiNGS, _not_ the current GitHub version.
+
+You can either build your own image or pull it from Docker Hub.
+
+#### Pulling from Docker Hub
+
+FiNGS Docker Hub page is here: https://hub.docker.com/r/cpwardell/fings
+
+```
+docker pull cpwardell/fings
+```
+#### Building local image
 You need to get a copy of the Dockerfile in this repository; below we use "wget" on Linux to download it, but you could just as easily 
 copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows
 and assumes that you're in the same directory as the dockerfile named "Dockerfile".
@@ -99,17 +112,14 @@ wget https://raw.githubusercontent.com/cpwardell/FiNGS/master/Dockerfile
 docker build -t fings .
 ```
 
-You can test that your image works by running a container interactively:
+#### Suggested Docker usage
+The default entrypoint for the image is launching FiNGS, so you can treat it much like the command-line version. However, you **MUST** ensure that the data you wish to use is somewhere the Docker container can access (by mounting directories using the -v argument of Docker) and that you either specify the working directory (-w argument of Docker) or specify the output directory (-d option of FiNGS).  If you fail to do this, the process will either fail or write to a directory internal to the Docker image. Note that the `-u` argument ensures that files created by the Docker container will be owned by the user invoking the process.
 ```
-docker run -it fings
-cd /FiNGS/exampledata
-./test.sh
-```
+## Simple example assumes user has downloaded the included exampledata directory
+docker run -it -v $PWD:/local -w /local -u $UID:$UID fings -n normal.bam -t tumor.bam -v s2.raw.vcf --PASSonlyin --PASSonlyout
 
-When you run it on your own data, you can mount the location of your files as below. This would output a results directory in the directory the command was executed in. Note that the `-u` argument ensures that files created by the 
-docker container will be owned by the user invoking the docker.
-```
-docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local -u $UID:$UID fings /bin/bash -c "python3 /FiNGS/FiNGS.py -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout"
+## Longer example with more complex setup
+docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local -u $UID:$UID fings -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout
 ```
 
 ## Suggested usage
