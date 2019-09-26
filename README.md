@@ -16,7 +16,7 @@ It has become common practice to attempt to ameliorate these effects using a var
 We have developed Filters for Next Generation Sequencing (FiNGS), software written specifically to address these filtering issues. FiNGS can implement the ICGC filtering standards and has filters and thresholds that are fully configurable, which substantially increases the precision of results and provides high quality variants for further analysis. 
 
 ## Availability
-FiNGS is open source and released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS).
+FiNGS is open source and released under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). The latest source code is [freely available at GitHub](https://github.com/cpwardell/FiNGS), at [PyPI](https://pypi.org/project/fings/), as a [Bioconda package](https://bioconda.github.io/recipes/fings/README.html) and as a Singularity-compatible [Docker image](https://hub.docker.com/r/cpwardell/fings).
 
 ## Dependencies
 ```Python 3``` and these Python packages:  
@@ -88,13 +88,12 @@ cd /go/to/fings/exampledata/
 ./test.sh
 ```
 
-### Docker installation and usage 
+### Docker/Singularity installation and usage 
 This guide assumes you have Docker installed and have some basic knowledge on how to use it. The Dockerfile builds an image based on the official Miniconda3 image and pulls the current Bioconda version of FiNGS, _not_ the current GitHub version.
 
 You can either build your own image or pull it from Docker Hub.
 
 #### Pulling from Docker Hub
-
 FiNGS Docker Hub page is here: https://hub.docker.com/r/cpwardell/fings
 
 ```
@@ -120,6 +119,13 @@ docker run -it -v $PWD:/local -w /local -u $UID:$UID fings -n normal.bam -t tumo
 
 ## Longer example with more complex setup
 docker run -v /path/to/tumorbamdir:/tumorbamdir -v /path/to/normalbamdir:/normalbamdir -v /path/to/vcfdir:/vcfdir -v $PWD:/local -w /local -u $UID:$UID fings -n /normalbamdir/normal.bam -t /tumorbamdir/tumor.bam -v /vcfdir/somatic.vcf --PASSonlyin --PASSonlyout
+```
+
+#### Using the Docker image with Singularity
+Please note that you ***must*** use at least Singularity version 2.5.2.  Version 2.5.1 will produce an "Attempt to whiteout outside of rootfs" error while pulling the image.
+```
+## Pull the image from Docker hub
+singularity pull docker://cpwardell/fings
 ```
 
 ## Suggested usage
