@@ -46,6 +46,7 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
         distancetoend1ref,distancetoend2ref=[],[]  # distance to ends from the variant position for REF reads
         distancetoend1alt,distancetoend2alt=[],[]  # distance to ends from the variant position for ALT reads
         reflevdists,altlevdists=[],[]  # Levenschtein distances
+        bxtagsref,bxtagsalt=[],[] # list of 10X sequencing barcodes
 
         ## If we are only using variants PASSed by the caller, skip the samfile pileup phase
         if(not PASS or (PASS and variant.FILTER==[])):
@@ -91,6 +92,7 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                                 FR+=1
                             else:
                                 RR+=1
+                            if alignedread.has_tag("BX"): bxtagsref.append(alignedread.get_tag("BX"))
 
                         ## Counters for ALT alelle reads
                         if(alignedread.seq[offset] == str(variant.ALT[0])):
@@ -113,6 +115,7 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                             if(alignedread.is_read2 and alignedread.mate_is_reverse): F2R1+=1  # 163/pPR2 F2R1
                             if(alignedread.is_read1 and alignedread.mate_is_reverse): F1R2+=1  # 99/pPR1 F1R2
                             if(alignedread.is_read2 and alignedread.is_reverse): F1R2+=1  # 147/pPr1 F1R2
+                            if alignedread.has_tag("BX"): bxtagsalt.append(alignedread.get_tag("BX"))
 
             ## Calculate metrics
             FoxoG=foxogcalc(variant.REF,F1R2,F2R1)  # FoxoG
@@ -162,6 +165,13 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             refmatecontigcount=lenunique(refmatecontigs)
             altmatecontigcount=lenunique(altmatecontigs)
             mtype=sixtypes(variant.REF,variant.ALT[0])  # what is the mutation type?
+            bxreadsref=roundpropfun(len(bxtagsref),refcount) # proportion of reads that have a 10X sequencing barcode
+            bxreadsalt=roundpropfun(len(bxtagsalt),altcount)
+            bxtagsuniqueref=lenunique(bxtagsref) # unique 10X barcodes
+            bxtagsuniquealt=lenunique(bxtagsalt)
+            
+            bxtagsrefstring=y=",".join(bxtagsref)
+            bxtagsaltstring=y=",".join(bxtagsalt)
 
             ## Generate output string
             UID=str(variant.CHROM)+":"+str(variant.POS)+":"+str(variant.REF)+":"+str(variant.ALT[0])
@@ -183,7 +193,8 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                                                     refsecondprop,altsecondprop,
                                                     refbadorientationprop,altbadorientationprop,
                                                     refmatecontigcount,altmatecontigcount,
-                                                    mtype])
+                                                    mtype,
+                                                    bxreadsref,bxreadsalt,bxtagsuniqueref,bxtagsuniquealt,bxtagsrefstring,bxtagsaltstring])
 
             ## Append string to output list
             allvariants.append(outputstring)

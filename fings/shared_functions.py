@@ -66,6 +66,6 @@ def colnamelist():
             "madalt2","shortestdistancetoendmedian","madaltshort","sb","gsb","fishp",
             "FR","FA","RR","RA","altsb","refsb","allsb","F1R2","F2R1","FoxoG","refld","altld",
             "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
-            "altmatecontigcount","sixtypes"]
+            "altmatecontigcount","sixtypes","bxreadsref","bxreadsalt","bxtagsuniqueref","bxtagsuniquealt","bxtagsref","bxtagsalt"]
     return(cnames)
 
