@@ -178,6 +178,8 @@ def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
                 densityplot(ndf["refbadorientationprop"],pdict["maxbadorient"],"Maximum proportion of inversion orientation\nreads in normal: ","left",pdf)
             if key == "minmapqualitydifference":
                 densityplot(abs(ndf["medianmapqref"]-tdf["medianmapqalt"]),pdict["minmapqualitydifference"],"Maximum difference between median mapping quality\nof ALT reads in tumor and REF reads in normal: ","left",pdf)
+            if key == "tenxbarcodes":
+                densityplot(tdf["bxtagsuniquealt"],pdict["tenxbarcodes"],"Minimum number of 10X barcodes (BX tags) in ALT reads in tumor: ","right",pdf)
 #            if key == "foxog":  # NEED AN X Y SCATTER PLOT
 #                scatterplot(tdf["F1R2"],tdf["F2R1"],tdf["sixtypes"],"FoxoG plot",pdf)
 #                fdict["foxogtumor"]=filterfoxog(pair[0]["REF"],pair[0]["sixtypes"],pair[0]["F1R2"],pair[0]["F2R1"],pdict["foxog"])  # TUMOR
@@ -627,6 +629,16 @@ def filterrepeats(chr,pos,nlength,repeatlist,referencegenome):
 
     return(result)
 
+## Variants with no BX tags (i.e. no 10X Genomics barcodes) FAIL by default
+def filtertenxbarcodes(testvalue,tenxbarcodes):
+    result=False
+    try:
+        testvalue=float(testvalue)
+    except:
+        testvalue=0
+    if(testvalue >= tenxbarcodes):
+        result=True
+    return(result)
 
 ## Ensure that list of filters received is ok
 def filtercheck(pdict):
@@ -653,7 +665,8 @@ def filtercheck(pdict):
               "maxbadorient",
               "foxog",
               "snvcluster50",
-              "snvcluster100"]
+              "snvcluster100",
+              "tenxbarcodes"]
     for key in pdict.keys():
         if key in truekeys:
             continue
@@ -736,6 +749,9 @@ def filterbuild(pair,pdict,sdict,referencegenome,repeatlist,vcf_reader):
         if key == "repeats":
             fdict["repeats"]=filterrepeats(pair[0]["CHR"],pair[0]["POS"],pdict["repeats"],repeatlist,referencegenome)  # TUMOR
             vcf_reader.filters[21]=["repeats","Maximum length of 1/2/3/4mer repeats around the variant position: "+str(int(pdict["repeats"]))]
+        if key == "tenxbarcodes":
+            fdict["tenxbarcodes"]=filtertenxbarcodes(pair[0]["bxtagsuniquealt"],pdict["tenxbarcodes"])  # TUMOR
+            vcf_reader.filters[20]=["tenxbarcodes","Minimum number of 10X barcodes (BX tags) in ALT reads in tumor: "+str(pdict["tenxbarcodes"])]
         if key == "maxaltcount":
             fdict["maxaltcount"]=filtermaxaltcount(pair[1]["altcount"],pdict["maxaltcount"])  # NORMAL
             vcf_reader.filters[22]=["maxaltcount","Maximum number of ALT reads in normal: "+str(int(pdict["maxaltcount"]))]

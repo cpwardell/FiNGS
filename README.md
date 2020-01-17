@@ -180,7 +180,7 @@ The following arguments and flags are available:
 Run FiNGS with no additional arguments to get the help file. If there's something not adddressed here, or if you need further help, raise an issue on GitHub or find me online.
 
 ## Citing FiNGS
-A paper is being prepared for submission shortly and will be referenced here when available.
+A paper is under review and will be referenced here when available.
 
 ## Description of filters
 FiNGS assesses variants using any combination of these possible filters. Below is a table describing them, their default thresholds and ICGC thresholds.  NA values mean that the filter is not employed in eithe the default or ICGC mode.  **Users can create their own tab-delimited parameter text file using *any* combination of filters and thresholds, and pass it in using the -p argument.**
@@ -209,6 +209,7 @@ Filter name | Description | Default value | ICGC value
 **snvcluster50** | Maximum number of mutations within 50 bp (see note below) | NA | 2
 **snvcluster100** | Maximum number of mutations within 100 bp (see note below) | NA | 4
 **repeats** | Maximum length of 1/2/3/4mer repeats around the variant position (see note below) | NA | 12
+**tenxbarcodes** | Minimum number of 10X barcodes (BX tags) in ALT reads in tumor (see note below) | NA | NA
 
 + **Note on _foxog_ filter**  
 C>A|G>T variants can be oxidation artifacts introduced during library preparation [(Costello et al, 2013)](http://doi.org/10.1093/nar/gks1443).
@@ -228,6 +229,9 @@ Maximum number of SNVs in the input VCF in a 50 or 100 bp window centered on the
 
 + **Note on _repeats_ filter**  
 Maximum length of 1/2/3/4mers surrounding the SNV. Lengths must be factors of repeats e.g. n=8 would only consider 1/2/4mers because 3 is not a factor of 8.  Repeated regions frequently result in false positive variants.  When using this filter, a reference genome *must* be supplied so FiNGS can find the flanking sequences.
+
++ **Note on _tenxbarcodes_ filter**  
+[10X Genomics](https://www.10xgenomics.com/) data includes barcodes that tell you which fragment of DNA each read is from. These strings (e.g. "CTGCGGAAGCCCGTGT-1") are encoded as "BX" tags in the SAM/BAM files. This filter specifies a minimum number of fragments of DNA that variant supporting ALT reads must be from. We suggest a value of 2, but this filter is not part of any default file included with FiNGS and must be manually added to the parameters file.
 
 ## Dictionary of values reported in the metrics files
 The gzipped `tumor.combined.txt.gz` and `normal.combined.txt.gz` output files contain all metrics calculated for every input variant. Each row is a single variant. Non-integer values are rounded to 3 decimal places. Not all of the values reported are used for filtering.
@@ -293,4 +297,9 @@ Column | Description | Example
 **refmatecontigcount** | Number of contigs seen in REF reads | 1
 **altmatecontigcount** | Number of contigs seen in ALT reads | 1
 **sixtypes** | Types of SNV (of the six possible types) | C>T/G>A
-
+**bxreadsref** | Proportion of REF reads containg 10X Genomics BX tags | 0.906
+**bxreadsalt** | Proportion of ALT reads containg 10X Genomics BX tags | 0.958
+**bxtagsuniqueref** | Number of unique 10X Genomics BX tags in REF reads | 16
+**bxtagsuniquealt** | Number of unique 10X Genomics BX tags in ALT reads | 20
+**bxtagsref** | Comma-separated string of all unique 10X Genomics BX tags in REF reads | TGTACGATCCACTCCA-1,GCTGCTTCACCCACAG-1
+**bxtagsalt** | Comma-separated string of all unique 10X Genomics BX tags in ALT reads | TATATCCCATGGCTAT-1,CAGGTATAGGCAGCAT-1
