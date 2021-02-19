@@ -19,6 +19,9 @@ from collections import OrderedDict
 from itertools import repeat, product
 from shared_functions import colnamelist
 
+## Turn off warnings for writing files
+matplotlib.rc('figure', max_open_warning = 0)
+
 ## Define column names for tdata and ndata
 cnames=colnamelist()
 
@@ -232,26 +235,27 @@ def densityplot(pcol,vline,title,goodside,pdf):
     ## Produces the initial seaborn plot
     ## We suppress warnings in case empty lists are passed in
     numpy.seterr(divide='ignore', invalid='ignore')
-    plt=sns.distplot(pcol, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"}, hist=False)#,hist_kws={"color": "grey", "alpha": 0})
-    plt.axvline(vline,linestyle="--",color=bloodred)
-    plt.set_title(title+str(round(vline,3)))
+    #plt=sns.distplot(pcol, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"}, hist=False)#,hist_kws={"color": "grey", "alpha": 0})
+    plt=sns.displot(data=pcol)#, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"})#,hist_kws={"color": "grey", "alpha": 0})
+    #plt.axvline(vline,linestyle="--",color=bloodred)
+    #plt.set_title(title+str(round(vline,3)))
 
     ## This block calculates the areas either side of the threshold line for shading
     ## We ensure y values are never less than 0
-    kde = smnp.KDEUnivariate(pcol.astype(numpy.float64))
-    kde.fit("gau", "scott", "gau", gridsize=100, cut=3, clip=(-numpy.inf, numpy.inf))
-    x, y = kde.support, kde.density
-    y=[max(x,0) for x in y] 
+    #kde = smnp.KDEUnivariate(pcol.astype(numpy.float64))
+    #kde.fit("gau", "scott", "gau", gridsize=100, cut=3, clip=(-numpy.inf, numpy.inf))
+    #x, y = kde.support, kde.density
+    #y=[max(x,0) for x in y] 
  
     ## Apply shading
-    if(goodside=="left"):
-        plt.fill_between(x,0,y,color=goodgreen, where = x < vline)
-        plt.fill_between(x,0,y,color=badred, alpha=1, where = x > vline)
-    if(goodside=="right"):
-        plt.fill_between(x,0,y,color=badred, where = x < vline)
-        plt.fill_between(x,0,y,color=goodgreen, alpha=1, where = x > vline)
+    #if(goodside=="left"):
+    #    plt.fill_between(x,0,y,color=goodgreen, where = x < vline)
+    #    plt.fill_between(x,0,y,color=badred, alpha=1, where = x > vline)
+    #if(goodside=="right"):
+    #    plt.fill_between(x,0,y,color=badred, where = x < vline)
+    #    plt.fill_between(x,0,y,color=goodgreen, alpha=1, where = x > vline)
     pdf.savefig()
-    plt.get_figure().clf() # clears figure to prevent multiple overlapping plots
+    #plt.get_figure().clf() # clears figure to prevent multiple overlapping plots
 
 
 
