@@ -237,8 +237,8 @@ def densityplot(pcol,vline,title,goodside,pdf):
     numpy.seterr(divide='ignore', invalid='ignore')
     #plt=sns.distplot(pcol, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"}, hist=False)#,hist_kws={"color": "grey", "alpha": 0})
     plt=sns.displot(data=pcol)#, color="black", kde_kws={"shade": False}, rug=True, rug_kws={"height": 0.02, "color": "black"})#,hist_kws={"color": "grey", "alpha": 0})
-    #plt.axvline(vline,linestyle="--",color=bloodred)
-    #plt.set_title(title+str(round(vline,3)))
+    plt.map(pyplot.axvline,x=vline,linestyle="--",color=bloodred)
+    plt.fig.suptitle(title+str(round(vline,3)))
 
     ## This block calculates the areas either side of the threshold line for shading
     ## We ensure y values are never less than 0
