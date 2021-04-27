@@ -9,6 +9,7 @@
 - **Calculates metrics based on BAM files and provides filtering not possible with other tools**
 - **Fully user-configurable filtering (including which filters to use and their thresholds)**
 - **Option to use filters identical to ICGC recommendations**
+- **Added 2021: runs using "fings" command after Python installation**
 
 ## Introduction
 Somatic variant callers compare matched pairs of tumor-normal samples to produce variant calls. The results can be extremely rich in false positives due to confounding factors such as the purity of the samples, artifacts introduced by sequencing chemistry, the alignment algorithm and the incomplete and repetitive nature of reference genomes.  
@@ -68,15 +69,21 @@ Locate the FiNGS package, navigate to the example data and run the script to con
 
 ### GitHub installation
 The advantage of a GitHub installation is that you know exactly where your FiNGS code is; we still advise managing the dependencies listed above using Conda.
-Clone the git repository and run the included example script in the `exampledata` directory.
+Clone the git repository and run the included example script in the `exampledata` directory.  After installation, the command "fings" can be used in the console to launch it.
 ```
 git clone https://github.com/cpwardell/FiNGS.git
+cd FiNGS
+python setup.py install
+
+## Test using example data
 cd FiNGS/fings/exampledata
 ./test.sh
 ```
 
+
 ### python3-pip installation
 Assuming you have Python3 and pip3, you can install using pip because FiNGS lives on PyPi here: https://pypi.org/project/fings/
+After installation, "fings" can be used on the command line to launch it.
 ```
 pip3 install fings
 ```
@@ -101,8 +108,7 @@ docker pull cpwardell/fings
 ```
 #### Building local image
 You need to get a copy of the Dockerfile in this repository; below we use "wget" on Linux to download it, but you could just as easily 
-copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows
-and assumes that you're in the same directory as the dockerfile named "Dockerfile".
+copy and paste the link in your web browser and "right click/save as" the file. The Docker build command works identically in both Bash on Linux and PowerShell on Windows and assumes that you're in the same directory as the dockerfile named "Dockerfile".
 
 ```
 # Download the Dockerfile from this address:
@@ -135,13 +141,13 @@ singularity pull docker://cpwardell/fings
 + Only emit variants that PASS all filters  
 
 ```
-python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf --PASSonlyin --PASSonlyout
+fings -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf --PASSonlyin --PASSonlyout
 ```
 
 + ICGC mode:
 
 ```
-python3 /path/to/FiNGS.py -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf -r /path/to/reference/genome.fasta --PASSonlyin --PASSonlyout --ICGC
+fings -n /path/to/normal.bam -t /path/to/tumor.bam -v /path/to/somaticvariants.vcf -r /path/to/reference/genome.fasta --PASSonlyin --PASSonlyout --ICGC
 ```
 
 FiNGS will create a directory called "results" containing the following files:
