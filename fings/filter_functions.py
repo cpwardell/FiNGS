@@ -17,13 +17,13 @@ import matplotlib.backends.backend_pdf
 from matplotlib import pyplot
 from collections import OrderedDict
 from itertools import repeat, product
-from shared_functions import colnamelist
+from fings import shared_functions
 
 ## Turn off warnings for writing files
 matplotlib.rc('figure', max_open_warning = 0)
 
 ## Define column names for tdata and ndata
-cnames=colnamelist()
+cnames=shared_functions.colnamelist()
 
 ## Define some colors for plotting
 bloodred="#870202"

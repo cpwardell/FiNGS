@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2018-2019 CP Wardell
+# Copyright 2018-2021 CP Wardell
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,11 +36,11 @@ import math
 import gzip
 import csv
 import datetime
-
-from shared_functions import vcfcount, vcfyield, quantilewithnas, writeheader
-from primary import primary
-from filter_functions import applyfilters
 from joblib import Parallel, delayed
+
+from fings import shared_functions
+from fings import primary
+from fings import filter_functions
 
 
 def main():
