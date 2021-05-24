@@ -188,7 +188,7 @@ def main():
         tout=gzip.open(tdata, 'wt')
         writeheader(tout)
         for LINE in tumvars:
-            if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
+            if(len(LINE) != 0): # protects against no variants in chunk e.g. if none are PASS
                 tcsv = csv.reader(LINE, delimiter='\t')
                 strandbiastumor.append([item[37] for item in tcsv])  # hardcoded location of sb metric
                 print(*LINE,sep="\n",file=tout)
@@ -198,7 +198,7 @@ def main():
         nout=gzip.open(ndata, 'wt')
         writeheader(nout)
         for LINE in normvars:
-            if(len(LINE) is not 0): # protects against no variants in chunk e.g. if none are PASS
+            if(len(LINE) != 0): # protects against no variants in chunk e.g. if none are PASS
                 print(*LINE,sep="\n",file=nout)
         nout.close()
 
