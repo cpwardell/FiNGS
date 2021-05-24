@@ -36,7 +36,7 @@ editdistance
 ## Quickstart guide, with example data and test
 You have a number of options for installing and running FiNGS: 
 1. Download using Bioconda (preferred)
-2. Download directly from GitHub
+2. Download directly from GitHub and install
 3. Download using pip3
 4. Download using Docker/Singularity
 
@@ -83,6 +83,7 @@ cd FiNGS/fings/exampledata
 
 ### python3-pip installation
 Assuming you have Python3 and pip3, you can install using pip because FiNGS lives on PyPi here: https://pypi.org/project/fings/
+Some packages may require building using the GCC compiler, so make sure it's installed.
 After installation, "fings" can be used on the command line to launch it.
 ```
 pip3 install fings
