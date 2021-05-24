@@ -53,11 +53,6 @@ def quantilewithnas(listwithnas,quantile):
 
 ## Writes header for tumor and normal filter metrics
 def writeheader(file):
-    cnames=colnamelist()
-    file.write('\t'.join(cnames[0:]) + '\n')
-
-## Define column names for tdata and ndata
-def colnamelist():
     cnames=["UID","CHR","POS","REF","ALT","refcount","altcount","varianttype","depth","vaf","raf","oaf",
             "medianbaseq","medianbaseqref","medianbaseqalt","medianmapq","medianmapqref","medianmapqalt",
             "zeros","zerospersite","softreadlengthsrefmean","softreadlengthsaltmean","goodoffsetproportion",
@@ -67,5 +62,4 @@ def colnamelist():
             "FR","FA","RR","RA","altsb","refsb","allsb","F1R2","F2R1","FoxoG","refld","altld",
             "refsecondprop","altsecondprop","refbadorientationprop","altbadorientationprop","refmatecontigcount",
             "altmatecontigcount","sixtypes"]
-    return(cnames)
-
+    file.write('\t'.join(cnames[0:]) + '\n')
