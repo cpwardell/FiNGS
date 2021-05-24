@@ -38,10 +38,9 @@ import csv
 import datetime
 from joblib import Parallel, delayed
 
-from fings import shared_functions
-from fings import primary
-from fings import filter_functions
-
+from shared_functions import *
+from primary import *
+from filter_functions import *
 
 def main():
 
