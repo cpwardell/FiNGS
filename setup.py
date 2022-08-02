@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fings",
-    version="1.7.1",
+    version="1.7.2",
     author="Christopher Wardell",
     author_email="github@cpwardell.com",
     description="Filters for Next Generation Sequencing",
@@ -17,7 +17,7 @@ setuptools.setup(
     install_requires=['pyvcf',
                       'pysam',
                       'numpy',
-                      'scipy',
+                      'scipy==1.2',
                       'pandas',
                       'joblib',
                       'seaborn',
@@ -33,5 +33,5 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='==3.7',
 )
