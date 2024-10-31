@@ -104,7 +104,7 @@ def applyfilters(tdata,ndata,sdata,pdict,args):
         ## Working with all variants, emit only PASS variants
         if(not args.PASSonlyin and args.PASSonlyout):
             record.FILTER=judgement(flist[idx])
-            if("PASS" in record.FILTER):
+            if(record.FILTER[0] == "PASS"):
                 writer.write_record(record)
         ## Working with only PASS variants, emit all variants
         if(args.PASSonlyin and not args.PASSonlyout):
@@ -117,7 +117,7 @@ def applyfilters(tdata,ndata,sdata,pdict,args):
             if(record.FILTER[0] == "PASS"):
                 record.FILTER=judgement(flist[passindex])
                 passindex+=1
-                if("PASS" in record.FILTER):
+                if(record.FILTER[0] == "PASS"):
                     writer.write_record(record)
 
     writer.close()

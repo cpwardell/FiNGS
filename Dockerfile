@@ -1,12 +1,17 @@
-# Based on Miniconda3 image
+# Use the continuumio/miniconda3 base image
 FROM continuumio/miniconda3
 
-# Update conda channels and install FiNGS
-RUN conda config --add channels defaults && \
-conda config --add channels bioconda && \
-conda config --add channels conda-forge && \
-conda install -y fings
+# Set working directory
+WORKDIR /app
 
-# Default entrypoint is FiNGS, default command is "--help"
+# Clone the repository directly
+RUN apt-get update && apt-get install -y git && \
+    git clone https://github.com/cpwardell/FiNGS.git . && \
+    apt-get clean
+
+# Install the package
+RUN pip install .
+
+# Set entrypoing and the default command
 ENTRYPOINT ["fings"]
 CMD ["--help"]

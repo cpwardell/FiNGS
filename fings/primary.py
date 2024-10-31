@@ -19,7 +19,10 @@ def primary(myvcf,filename,chunknumber,maxchunks,args):
 
     ## Open the bamfile. We do it ONCE and ONCE ONLY for speed reasons
     logging.debug("Opening bam file")
-    samfile=pysam.Samfile(args.t,"rb")  # rb = "read bam"
+    if filename == "tumor":
+        samfile=pysam.Samfile(args.t,"rb")  # rb = "read bam"
+    if filename == "normal":
+        samfile=pysam.Samfile(args.n,"rb")  # rb = "read bam"
 
     #################### START ITERATING THROUGH VARIANTS IN CHUNK ###########################
     for idx,variant in enumerate(myvcf):
