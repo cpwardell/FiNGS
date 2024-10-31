@@ -11,6 +11,13 @@
 - **Option to use filters identical to ICGC recommendations**
 - **Added 2021: runs using "fings" command after Python installation**
 
+## News
+- **October 2024: updated code to work with up-to-date packages, including changing VCF package to vcfpy**
+
+## Citing FiNGS
+For more information and if you use FiNGS in your work, please reference [our paper](https://pubmed.ncbi.nlm.nih.gov/33602113/):
+`Wardell CP, Ashby C, Bauer MA. FiNGS: high quality somatic mutations using filters for next generation sequencing. BMC Bioinformatics. 2021;22(1):77. Published 2021 Feb 18. doi:10.1186/s12859-021-03995-y`
+
 ## Introduction
 Somatic variant callers compare matched pairs of tumor-normal samples to produce variant calls. The results can be extremely rich in false positives due to confounding factors such as the purity of the samples, artifacts introduced by sequencing chemistry, the alignment algorithm and the incomplete and repetitive nature of reference genomes.  
 It has become common practice to attempt to ameliorate these effects using a variety of filtering techniques, including taking the intersect of results from multiple variant callers and employing some post-calling filtering. This ad-hoc filtering varies greatly between laboratories.  Attempts have been made to standardize the methodology of this filtering, with recommendations produced by the International Cancer Genome Consortium (ICGC) [(Alioto et al., 2015)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4682041/).  
@@ -22,7 +29,7 @@ FiNGS is open source and released under the [Apache License, Version 2.0](https:
 ## Dependencies
 ```Python 3``` and these Python packages:  
 ```
-pyvcf  
+vcfpy  
 pysam  
 numpy  
 scipy  
@@ -185,9 +192,6 @@ The following arguments and flags are available:
 
 ## Getting help
 Run FiNGS with no additional arguments to get the help file. If there's something not adddressed here, or if you need further help, raise an issue on GitHub or find me online.
-
-## Citing FiNGS
-A paper is being prepared for submission shortly and will be referenced here when available.
 
 ## Description of filters
 FiNGS assesses variants using any combination of these possible filters. Below is a table describing them, their default thresholds and ICGC thresholds.  NA values mean that the filter is not employed in eithe the default or ICGC mode.  **Users can create their own tab-delimited parameter text file using *any* combination of filters and thresholds, and pass it in using the -p argument.**
