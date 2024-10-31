@@ -1,16 +1,16 @@
 ## Primary function. This is called once for every chunk of SNVs
 ## To ensure speed, the BAM file(s) are read ONCE and ONCE only
 
-
+import sys
 import logging
 import pysam
 import statistics
 import scipy.stats
 import editdistance
 import numpy
+import vcfpy
 
-
-def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
+def primary(myvcf,filename,chunknumber,maxchunks,args):
 
     logging.info("Started processing "+filename+" chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" containing "+str(len(myvcf))+" records")
 
@@ -19,15 +19,15 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
 
     ## Open the bamfile. We do it ONCE and ONCE ONLY for speed reasons
     logging.debug("Opening bam file")
-    samfile=pysam.Samfile(bampath,"rb")  # rb = "read bam"
+    samfile=pysam.Samfile(args.t,"rb")  # rb = "read bam"
 
     #################### START ITERATING THROUGH VARIANTS IN CHUNK ###########################
     for idx,variant in enumerate(myvcf):
         ## Determine if a variant is a SNV, insert or deletion
-        varianttype=varianttyper(variant.REF,variant.ALT)
+        varianttype=variant.ALT[0].type
 
-        ## If the variant isn't a SNV, skip it
-        if(varianttype!="SNV"): next
+        ## If the variant isn't a SNV, or is multiallelic, skip it
+        if(varianttype!="SNV" or len(variant.REF)!=1): next
 
         ## Variable declarations:
         depth=0  # depth
@@ -48,15 +48,15 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
         reflevdists,altlevdists=[],[]  # Levenschtein distances
 
         ## If we are only using variants PASSed by the caller, skip the samfile pileup phase
-        if(not PASS or (PASS and variant.FILTER==[])):
+        if(not args.PASSonlyin or (args.PASSonlyin and variant.FILTER[0]=="PASS")):
             #################### START ITERATING THROUGH READS AT VARIANT POSITION ###########################
             for alignedread in samfile.fetch(variant.CHROM,variant.POS-1,variant.POS):  # VCFs are 1 based, SAM coordinates are 0 based
                 if alignedread.is_duplicate:  # ignore duplicates
                     continue
                 else:
                     ## If depth is beyond maxdepth, break loop and calculate results and emit a warning to the user
-                    if(depth>=maxdepth):
-                        logging.info("WARNING: variant "+str(idx+1)+" of "+str(len(myvcf))+" in chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" at position "+str(variant.CHROM)+":"+str(variant.POS)+" is deeper than maximum depth of "+str(maxdepth)+", calculations truncated at this depth")
+                    if(depth>=args.m):
+                        logging.info("WARNING: variant "+str(idx+1)+" of "+str(len(myvcf))+" in chunk "+str(chunknumber+1)+" of "+str(maxchunks)+" at position "+str(variant.CHROM)+":"+str(variant.POS)+" is deeper than maximum depth of "+str(args.m)+", calculations truncated at this depth")
                         break
 
                     ## Increment depth by 1 and append new mapping quality
@@ -93,7 +93,7 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
                                 RR+=1
 
                         ## Counters for ALT alelle reads
-                        if(alignedread.seq[offset] == str(variant.ALT[0])):
+                        if(alignedread.seq[offset] == str(variant.ALT[0].value)):
                             altcount+=1
                             if alignedread.is_secondary: altsecond+=1
                             if not alignedread.is_proper_pair: altbadorientation+=1
@@ -161,12 +161,12 @@ def primary(myvcf,bampath,filename,chunknumber,maxchunks,maxdepth,PASS):
             altbadorientationprop=roundpropfun(altbadorientation,altcount)
             refmatecontigcount=lenunique(refmatecontigs)
             altmatecontigcount=lenunique(altmatecontigs)
-            mtype=sixtypes(variant.REF,variant.ALT[0])  # what is the mutation type?
+            mtype=sixtypes(variant.REF,variant.ALT[0].value)  # what is the mutation type?
 
             ## Generate output string
-            UID=str(variant.CHROM)+":"+str(variant.POS)+":"+str(variant.REF)+":"+str(variant.ALT[0])
+            UID=str(variant.CHROM)+":"+str(variant.POS)+":"+str(variant.REF)+":"+str(variant.ALT[0].value)
             outputstring="\t".join(str(x) for x in [UID,
-                                                    variant.CHROM,variant.POS,variant.REF,variant.ALT[0],
+                                                    variant.CHROM,variant.POS,variant.REF,variant.ALT[0].value,
                                                     refcount,altcount,varianttype,depth,vaf,raf,oaf,
                                                     medianbaseq,medianbaseqref,medianbaseqalt,
                                                     medianmapq,medianmapqref,medianmapqalt,
@@ -281,24 +281,6 @@ def foxogcalc(REF,F1R2,F2R1):
     except:
         FoxoG="NA"
     return(FoxoG)
-
-
-## Determine if a variant is a SNV, insert or deletion. Default is SNV
-def varianttyper(REF,ALT):
-    varianttype="SNV"
-    if(len(REF)==1 and len(str(ALT[0]))==1):
-        varianttype="SNV"
-    elif(len(REF)!=1):
-        varianttype="del"
-    elif(len(str(ALT[0]))!=1):
-        varianttype="ins"
-
-    ## Exception for Strelka where some ALT alleles are encoded as "."
-    if varianttype=="ins" and ALT[0] is None:
-        varianttype="SNV"
-
-    return(varianttype)
-
 
 ## Determine the position of the variant within the read
 def offsetget(aligned_pairs,POS):

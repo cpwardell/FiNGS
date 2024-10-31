@@ -6,7 +6,7 @@ import os
 import gzip
 import csv
 import scipy.stats
-import vcf
+import vcfpy
 import pysam
 import numpy
 import pandas
@@ -38,14 +38,14 @@ badred="#E41A1C"
 goodgreen="#4DAF4A"
 
 ## Main filter function; a list of the filters that are applied
-def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASSonlyin,PASSonlyout):
+def applyfilters(tdata,ndata,sdata,pdict,args):
 
     ## Read in metrics and apply filters
     ## We read the data back from a temporary file in case to make it easier to recover from crashes
     ## and to speed up filtering; gathering the metrics is the rate limiting step
 
     ## Use input VCF as a template
-    vcf_reader = vcf.Reader(open(vcfpath, 'r'))
+    vcf_reader = vcfpy.Reader.from_path(args.v)
 
     ## Read in summary data from file
     try:
@@ -71,14 +71,14 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
     flist=[]
     for pair in metricyielder(tdata,ndata):
         ## Create a dictionary of filters and populate it
-        fdict=filterbuild(pair,pdict,sdict,referencegenome,repeatlist,vcf_reader)
+        fdict=filterbuild(pair,pdict,sdict,args,repeatlist,vcf_reader)
         flist.append(fdict)
 
     ## Now we have all mutations in an object, we can run filters that reference other mutations
     filtergroup(flist,pdict,vcf_reader)
 
     ## Write the filter results (a list of dictionaries) to a file
-    fdata=resultsdir+"/filterresults.txt.gz"
+    fdata=args.d+"/filterresults.txt.gz"
     logging.info("Writing filter results to file: "+fdata)
     ordered_fieldnames = flist[0].keys()
     with gzip.open(fdata,'wt') as fout:
@@ -90,58 +90,56 @@ def applyfilters(tdata,ndata,sdata,pdict,resultsdir,vcfpath,referencegenome,PASS
 
     ####################################################
     ## Use the filter results to write VCF results
-    vfile=resultsdir+"/"+os.path.splitext(os.path.basename(vcfpath))[0]+".filtered.vcf"
+    vfile=args.d+"/"+os.path.splitext(os.path.basename(args.v))[0]+".filtered.vcf"
     logging.info("Writing filtered VCF to file: "+vfile)
 
-    with open(vfile, "w") as out_vcf:
-        writer = vcf.Writer(out_vcf, vcf_reader)
-        passindex=0
-        for idx,record in enumerate(vcf_reader):
-            ## Working with all variants, emit all variants
-            if(not PASSonlyin and not PASSonlyout):
-                record.FILTER=judgement(flist[idx])
+    ## Add filters to header
+    writer = vcfpy.Writer.from_path(vfile, vcf_reader.header)
+    passindex=0
+    for idx,record in enumerate(vcf_reader):
+        ## Working with all variants, emit all variants
+        if(not args.PASSonlyin and not args.PASSonlyout):
+            record.FILTER=judgement(flist[idx])
+            writer.write_record(record)
+        ## Working with all variants, emit only PASS variants
+        if(not args.PASSonlyin and args.PASSonlyout):
+            record.FILTER=judgement(flist[idx])
+            if("PASS" in record.FILTER):
                 writer.write_record(record)
-
-            ## Working with all variants, emit only PASS variants
-            if(not PASSonlyin and PASSonlyout):
-                record.FILTER=judgement(flist[idx])
+        ## Working with only PASS variants, emit all variants
+        if(args.PASSonlyin and not args.PASSonlyout):
+            if(record.FILTER[0] == "PASS"):
+                record.FILTER=judgement(flist[passindex])
+                passindex+=1
+                writer.write_record(record)
+        ## Working with only PASS variants, emit only PASS variants
+        if(args.PASSonlyin and args.PASSonlyout):
+            if(record.FILTER[0] == "PASS"):
+                record.FILTER=judgement(flist[passindex])
+                passindex+=1
                 if("PASS" in record.FILTER):
                     writer.write_record(record)
-
-            ## Working with only PASS variants, emit all variants
-            if(PASSonlyin and not PASSonlyout):
-                if(len(record.FILTER) == 0):
-                    record.FILTER=judgement(flist[passindex])
-                    passindex+=1
-                    writer.write_record(record)
-
-            ## Working with only PASS variants, emit only PASS variants
-            if(PASSonlyin and PASSonlyout):
-                if(len(record.FILTER) == 0):
-                    record.FILTER=judgement(flist[passindex])
-                    passindex+=1
-                    if("PASS" in record.FILTER):
-                        writer.write_record(record)
 
     writer.close()
     logging.info("Writing VCF complete")
 
-    ## Produce plots
+    ## Produce plots if desired
     ## To produce plots, we need the whole dataset;
     ## read in tdata/ndata
     ## Loop through pdict and produce plots according to what's in there
-    logging.info("Writing plots to file: "+resultsdir+"/plots.pdf")
-    filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir)
-    logging.info("Writing plots complete")
+    if not args.noplots:
+        logging.info("Writing plots to file: "+args.d+"/plots.pdf")
+        filterplotter(tdata,ndata,fdata,pdict,sdict,args)
+        logging.info("Writing plots complete")
 
-def filterplotter(tdata,ndata,fdata,pdict,sdict,resultsdir):
+def filterplotter(tdata,ndata,fdata,pdict,sdict,args):
     ## Read in tdata and ndata
     try:
         tdf = pandas.read_csv(tdata, compression='gzip', sep="\t", header=0)
         ndf = pandas.read_csv(ndata, compression='gzip', sep="\t", header=0)
 
         ## Crate pdf output file and put plots in it; summary table first
-        pdf = matplotlib.backends.backend_pdf.PdfPages(resultsdir+"/plots.pdf")
+        pdf = matplotlib.backends.backend_pdf.PdfPages(args.d+"/plots.pdf")
         summaryplots(fdata,pdict,pdf)
         for key in pdict.keys():
             if key == "minimumdepth":
@@ -556,26 +554,32 @@ def filtermaxbadorient(testvalue,maxbadorient):
 def filterfoxog(ref,sixtypes,F1R2,F2R1,foxog):
     result=False
 
-    ## Cast F1R2 and F2R1 to floats
+    ## Cast F1R2 and F2R1 to ints
     try:
-        F1R2=float(F1R2)
-        F2R1=float(F2R1)
+        F1R2=int(F1R2)
+        F2R1=int(F2R1)
     except:
         F1R2=1
         F2R1=1
 
     ## Separate tests for REF C and REF G
     if(sixtypes == "C>A/G>T" and ref == "C"):
-        phalf=scipy.stats.binom_test(F2R1,F2R1+F1R2,0.5)
-        pthreshold=scipy.stats.binom_test(F2R1,F2R1+F1R2,foxog)
-        if(phalf > pthreshold):
-            result=True
+        if(F2R1!=0):
+            phalf=scipy.stats.binomtest(F2R1,F2R1+F1R2,0.5).pvalue
+            pthreshold=scipy.stats.binomtest(F2R1,F2R1+F1R2,foxog).pvalue
+            if(phalf > pthreshold):
+                result=True
+        else:
+            result=False
 
     if(sixtypes == "C>A/G>T" and ref == "G"):
-        phalf=scipy.stats.binom_test(F1R2,F1R2+F2R1,0.5)
-        pthreshold=scipy.stats.binom_test(F1R2,F1R2+F2R1,foxog)
-        if(phalf > pthreshold):
-            result=True
+        if(F1R2!=0):
+            phalf=scipy.stats.binomtest(F1R2,F1R2+F2R1,0.5).pvalue
+            pthreshold=scipy.stats.binomtest(F1R2,F1R2+F2R1,foxog).pvalue
+            if(phalf > pthreshold):
+                result=True
+        else:
+            result=False
 
     ## Pass any non C>A/G>T mutations
     if(sixtypes != "C>A/G>T"):
@@ -620,15 +624,15 @@ def filterstrandbiassimple(altsb,allsb,strandbias):
     return(result)
 
 ## Repeat filter
-def filterrepeats(chr,pos,nlength,repeatlist,referencegenome):
+def filterrepeats(chr,pos,nlength,repeatlist,args):
     result=False
     ## Ensure that a reference genome has been supplied by the user:
-    if(referencegenome=="None"):
+    if(args.r=="None"):
         print("CRITICAL ERROR: if \'repeats\' filter is in use, you MUST supply the absolute path to a faidx indexed reference genome (-r flag)")
         sys.exit()
 
     ## Fetch the n bases upstream and downstream of the variant; note we reverse the upstream sequence
-    refgenome=pysam.FastaFile(referencegenome)
+    refgenome=pysam.FastaFile(args.r)
     upstream=refgenome.fetch(str(chr),int(pos)-nlength-1,int(pos)-1)[::-1]
     downstream=refgenome.fetch(str(chr),int(pos),int(pos)+nlength)
 
@@ -676,89 +680,94 @@ def filtercheck(pdict):
 
 ## Returns a dictionary of filters
 ## and edits the header of the output VCF
-def filterbuild(pair,pdict,sdict,referencegenome,repeatlist,vcf_reader):
+def filterbuild(pair,pdict,sdict,args,repeatlist,vcf_reader):
     fdict=OrderedDict()
     fdict["CHR"]=pair[0]["CHR"]
     fdict["POS"]=pair[0]["POS"]
     fdict["altcount"]=pair[0]["altcount"]
     fdict["vaf"]=pair[0]["vaf"]
-    vcf_reader.filters=OrderedDict()  # reset the VCF filter descriptions in the header
+    ## If there are filters in the original header, remove them
+    oldfilters=vcf_reader.header.filter_ids()
+    if(len(oldfilters)>0):
+        for oldfilter in oldfilters:
+            vcf_reader.header = vcfpy.header_without_lines(vcf_reader.header, [('FILTER', oldfilter)])
+
     for key in pdict.keys():
         if key == "minimumdepth":
             fdict["minimumdepthtumor"]=filterminimumdepth(pair[0]["depth"],pdict["minimumdepth"])  # TUMOR
-            vcf_reader.filters[0]=["minimumdepthtumor","Minimum depth in tumor: "+str(int(pdict["minimumdepth"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minimumdepthtumor'), ('Description', "Minimum depth in tumor: "+str(int(pdict["minimumdepth"])))]))
             fdict["minimumdepthnormal"]=filterminimumdepth(pair[1]["depth"],pdict["minimumdepth"])  # NORMAL
-            vcf_reader.filters[1]=["minimumdepthnormal","Minimum depth in normal: "+str(int(pdict["minimumdepth"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minimumdepthnormal'), ('Description', "Minimum depth in normal: "+str(int(pdict["minimumdepth"])))]))
         if key == "maximumdepth":
             fdict["maximumdepthtumor"]=filtermaximumdepth(pair[0]["depth"],pdict["maximumdepth"])  # TUMOR
-            vcf_reader.filters[2]=["maximumdepthtumor","Maximum depth in tumor: "+str(int(pdict["maximumdepth"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maximumdepthtumor'), ('Description', "Maximum depth in tumor: "+str(int(pdict["maximumdepth"])))]))
             fdict["maximumdepthnormal"]=filtermaximumdepth(pair[1]["depth"],pdict["maximumdepth"])  # NORMAL
-            vcf_reader.filters[3]=["maximumdepthnormal","Maximum depth in normal: "+str(int(pdict["maximumdepth"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maximumdepthnormal'), ('Description', "Maximum depth in normal: "+str(int(pdict["maximumdepth"])))]))
         if key == "minaltcount":
             fdict["minaltcounttumor"]=filterminaltcount(pair[0]["altcount"],pdict["minaltcount"])  # TUMOR
-            vcf_reader.filters[4]=["minaltcounttumor","Minimum number of ALT reads in tumor: "+str(int(pdict["minaltcount"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minaltcounttumor'), ('Description', "Minimum number of ALT reads in tumor: "+str(int(pdict["minaltcount"])))]))
         if key == "minbasequality":
             fdict["minbasequalityalttumor"]=filterminbasequality(pair[0]["medianbaseqalt"],pdict["minbasequality"])  # TUMOR
-            vcf_reader.filters[5]=["minbasequalityalttumor","Minimum median base quality of ALT reads in tumor: "+str(pdict["minbasequality"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minbasequalityalttumor'), ('Description', "Minimum median base quality of ALT reads in tumor: "+str(pdict["minbasequality"]))]))
             fdict["minbasequalityreftumor"]=filterminbasequality(pair[0]["medianbaseqref"],pdict["minbasequality"],True)  # TUMOR
-            vcf_reader.filters[6]=["minbasequalityreftumor","Minimum median base quality of REF reads in tumor: "+str(pdict["minbasequality"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minbasequalityreftumor'), ('Description', "Minimum median base quality of REF reads in tumor: "+str(pdict["minbasequality"]))]))
             fdict["minbasequalityrefnormal"]=filterminbasequality(pair[1]["medianbaseqref"],pdict["minbasequality"])  # NORMAL
-            vcf_reader.filters[7]=["minbasequalityrefnormal","Minimum median base quality of REF reads in normal: "+str(pdict["minbasequality"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minbasequalityrefnormal'), ('Description', "Minimum median base quality of REF reads in normal: "+str(pdict["minbasequality"]))]))
         if key == "zeroproportion":
             fdict["zeroproportiontumor"]=filterzeroproportion(pair[0]["zerospersite"],pdict["zeroproportion"])  # TUMOR
-            vcf_reader.filters[8]=["zeroproportiontumor","Maximum proportion of zero mapping quality reads in tumor: "+str(pdict["zeroproportion"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'zeroproportiontumor'), ('Description', "Maximum proportion of zero mapping quality reads in tumor: "+str(pdict["zeroproportion"]))]))
             fdict["zeroproportionnormal"]=filterzeroproportion(pair[1]["zerospersite"],pdict["zeroproportion"])  # NORMAL
-            vcf_reader.filters[9]=["zeroproportionnormal","Maximum proportion of zero mapping quality reads in normal: "+str(pdict["zeroproportion"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'zeroproportionnormal'), ('Description', "Maximum proportion of zero mapping quality reads in normal: "+str(pdict["zeroproportion"]))]))
         if key == "minmapquality":
             fdict["minmapqualityalttumor"]=filterminmapquality(pair[0]["medianmapqalt"],pdict["minmapquality"])  # TUMOR
-            vcf_reader.filters[10]=["minmapqualityalttumor","Minimum median mapping quality of ALT reads in tumor: "+str(pdict["minmapquality"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minmapqualityalttumor'), ('Description', "Minimum median mapping quality of ALT reads in tumor: "+str(pdict["minmapquality"]))]))
         if key == "enddistance":
             fdict["enddistancetumor"]=filterenddistance(pair[0]["shortestdistancetoendmedian"],pdict["enddistance"])  # TUMOR
-            vcf_reader.filters[11]=["enddistancetumor","Minimum median shortest distance to either aligned end in tumor: "+str(pdict["enddistance"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'enddistancetumor'), ('Description', "Minimum median shortest distance to either aligned end in tumor: "+str(pdict["enddistance"]))]))
         if key == "enddistancemad":
             fdict["enddistancemadtumor"]=filterenddistancemad(pair[0]["madaltshort"],pdict["enddistancemad"])  # TUMOR
-            vcf_reader.filters[12]=["enddistancemadtumor","Minimum median absolute deviation (MAD) of median shortest distance to either aligned end in tumor: "+str(pdict["enddistancemad"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'enddistancemadtumor'), ('Description', "Minimum median absolute deviation (MAD) of median shortest distance to either aligned end in tumor: "+str(pdict["enddistancemad"]))]))
         if key == "editdistance":
             fdict["editdistancealttumor"]=filtereditdistance(pair[0]["altld"],pdict["editdistance"])  # TUMOR
-            vcf_reader.filters[13]=["editdistancealttumor","Maximum edit distance of ALT reads in tumor: "+str(pdict["editdistance"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'editdistancealttumor'), ('Description', "Maximum edit distance of ALT reads in tumor: "+str(pdict["editdistance"]))]))
             fdict["editdistancereftumor"]=filtereditdistance(pair[0]["refld"],pdict["editdistance"]-1,True)  # TUMOR
-            vcf_reader.filters[14]=["editdistancereftumor","Maximum edit distance of REF reads in tumor: "+str(pdict["editdistance"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'editdistancereftumor'), ('Description', "Maximum edit distance of REF reads in tumor: "+str(pdict["editdistance"]))]))
         if key == "minvaftumor":
             fdict["minvaftumor"]=filterminvaf(pair[0]["vaf"],pdict["minvaftumor"])  # TUMOR
-            vcf_reader.filters[15]=["minvaftumor","Minimum VAF in tumor: "+str(pdict["minvaftumor"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minvaftumor'), ('Description', "Minimum VAF in tumor: "+str(pdict["minvaftumor"]))]))
         if key == "maxoaftumor":
             fdict["maxoaftumor"]=filtermaxvaf(pair[0]["oaf"],pdict["maxoaftumor"])  # TUMOR
-            vcf_reader.filters[16]=["maxoaftumor","Maximum other allele frequency (OAF) in tumor: "+str(pdict["maxoaftumor"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maxoaftumor'), ('Description', "Maximum other allele frequency (OAF) in tumor: "+str(pdict["maxoaftumor"]))]))
         if key == "maxsecondtumor":
             fdict["maxaltsecondtumor"]=filtermaxaltsecond(pair[0]["altsecondprop"],pdict["maxsecondtumor"])  # TUMOR
-            vcf_reader.filters[17]=["maxaltsecondtumor","Maximum proportion of secondary alignments in tumor: "+str(pdict["maxsecondtumor"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maxaltsecondtumor'), ('Description', "Maximum proportion of secondary alignments in tumor: "+str(pdict["maxsecondtumor"]))]))
         if key == "foxog":
             fdict["foxogtumor"]=filterfoxog(pair[0]["REF"],pair[0]["sixtypes"],pair[0]["F1R2"],pair[0]["F2R1"],pdict["foxog"])  # TUMOR
-            vcf_reader.filters[18]=["foxogtumor","Maximum FoxoG artefact proportion: "+str(pdict["foxog"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'foxogtumor'), ('Description', "Maximum FoxoG artefact proportion: "+str(pdict["foxog"]))]))
         if key == "strandbiasprop":
             fdict["strandbiasprop"]=filterstrandbiasprop(pair[0]["sb"],sdict["strandbiastumorq"])  # TUMOR
-            vcf_reader.filters[19]=["strandbiasprop","Strand bias exclusion proportion: "+str(pdict["strandbiasprop"])+" (>"+str(round(sdict["strandbiastumorq"],3))+")"]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'strandbiasprop'), ('Description',"Strand bias exclusion proportion: "+str(pdict["strandbiasprop"])+" (>"+str(round(sdict["strandbiastumorq"],3))+")")]))
         if key == "strandbias":
             fdict["strandbias"]=filterstrandbias(pair[0]["sb"],pdict["strandbias"])  # TUMOR
-            vcf_reader.filters[20]=["strandbias","Maximum strand bias in tumor: "+str(pdict["strandbias"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'strandbias'), ('Description', "Maximum strand bias in tumor: "+str(pdict["strandbias"]))]))
         if key == "strandbiassimple":
             fdict["strandbiassimple"]=filterstrandbiassimple(pair[0]["altsb"],pair[0]["allsb"],pdict["strandbiassimple"])  # TUMOR
-            vcf_reader.filters[20]=["strandbiassimple","Maximum strand bias in ALT reads in tumor: "+str(pdict["strandbiassimple"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'strandbiassimple'), ('Description', "Maximum strand bias in ALT reads in tumor: "+str(pdict["strandbiassimple"]))]))
         if key == "repeats":
-            fdict["repeats"]=filterrepeats(pair[0]["CHR"],pair[0]["POS"],pdict["repeats"],repeatlist,referencegenome)  # TUMOR
-            vcf_reader.filters[21]=["repeats","Maximum length of 1/2/3/4mer repeats around the variant position: "+str(int(pdict["repeats"]))]
+            fdict["repeats"]=filterrepeats(pair[0]["CHR"],pair[0]["POS"],pdict["repeats"],repeatlist,args)  # TUMOR
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'repeats'), ('Description', "Maximum length of 1/2/3/4mer repeats around the variant position: "+str(int(pdict["repeats"])))]))
         if key == "maxaltcount":
             fdict["maxaltcount"]=filtermaxaltcount(pair[1]["altcount"],pdict["maxaltcount"])  # NORMAL
-            vcf_reader.filters[22]=["maxaltcount","Maximum number of ALT reads in normal: "+str(int(pdict["maxaltcount"]))]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maxaltcount'), ('Description', "Maximum number of ALT reads in normal: "+str(int(pdict["maxaltcount"])))]))
         if key == "maxvafnormal":
             fdict["maxvafnormal"]=filtermaxvaf(pair[1]["vaf"],pdict["maxvafnormal"])  # NORMAL
-            vcf_reader.filters[23]=["maxvafnormal","Maximum VAF in normal: "+str(pdict["maxvafnormal"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maxvafnormal'), ('Description', "Maximum VAF in normal: "+str(pdict["maxvafnormal"]))]))
         if key == "maxbadorient":
             fdict["maxrefbadorientnormal"]=filtermaxbadorient(pair[1]["refbadorientationprop"],pdict["maxbadorient"])  # NORMAL
-            vcf_reader.filters[24]=["maxrefbadorientnormal","Maximum proportion of inversion orientation reads in normal: "+str(pdict["maxbadorient"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'maxrefbadorientnormal'), ('Description', "Maximum proportion of inversion orientation reads in normal: "+str(pdict["maxbadorient"]))]))
         if key == "minmapqualitydifference":
             fdict["minmapqualitydifferencent"]=filterminmapqualitydifference(pair[0]["medianmapqalt"],pair[1]["medianmapqref"],pdict["minmapqualitydifference"])  # TUMOR AND NORMAL
-            vcf_reader.filters[25]=["minmapqualitydifferencent","Maximum difference between median mapping quality of ALT reads in tumor and REF reads in normal: "+str(pdict["minmapqualitydifference"])]
+            vcf_reader.header.add_filter_line(vcfpy.OrderedDict([('ID', 'minmapqualitydifferencent'), ('Description', "Maximum difference between median mapping quality of ALT reads in tumor and REF reads in normal: "+str(pdict["minmapqualitydifference"]))]))
     return(fdict)
 
 

@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fings"
+version = "1.8.0"
+requires-python = ">=3.9"
+description = "Filters for Next Generation Sequencing"
+license = {file = "LICENSE"}
+authors = [
+    { name = "Christopher Wardell", email = "cpwardell@uams.edu"}
+]
+readme = "README.md"
+keywords = [
+    'sequencing',
+    'next generation sequencing',
+    'cancer',
+    'genomics',
+    'filtering',
+    'SNVs',
+    'mutations',
+    'somatic mutations'
+]
+dependencies = [
+    "vcfpy",
+    "pysam",
+    "numpy",
+    "scipy",
+    "pandas",
+    "joblib",
+    "seaborn",
+    "statsmodels",
+    "editdistance"
+]
+
+[tool.setuptools]
+packages = ["fings"]
+
+[project.urls]
+homepage = "https://github.com/cpwardell/FiNGS"
+repository = "https://github.com/cpwardell/FiNGS"
+
+[project.scripts]
+fings = "fings.mainmethod:main"
